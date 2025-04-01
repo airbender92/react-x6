@@ -101,39 +101,58 @@ const App = () => {
             },
           })
 
-          graph.addEdge({
-            source: 'addNode1', // 源节点 ID
-            target: 'addNode2', // 目标节点 ID
-            labels: [
-                {
-                    attrs: {
+        graph.addEdge({
+        source: 'addNode1', // 源节点 ID
+        target: 'addNode2', // 目标节点 ID
+        labels: [
+            {
+                attrs: {
                     label: {
-                        text: 'edge',
-                    },
+                    text: '40%',
+                    stroke: '#aaa',
                     },
                 },
-            ],
-            attrs: {
-                line: {
-                  stroke: '#8f8f8f',
-                  strokeWidth: 1,
+                position: 0.4,
                 },
-              },
-            vertices: [
-            { x: 300, y: 200 },
-            { x: 300, y: 120 },
-            ],
-            router: {
-                // 经过 orth 路由处理后，边的每一条链接线段都是水平或垂直的。
-                name: 'orth',
-                args: {},
+                {
+                attrs: {
+                    label: {
+                    text: '60%',
+                    stroke: '#aaa',
+                    },
+                },
+                position: 0.6,
+                },
+        ],
+        attrs: {
+            line: {
+                sourceMarker: 'block', // 实心箭头
+                targetMarker: {
+                    name: 'ellipse', // 椭圆
+                    rx: 10, // 椭圆箭头的 x 半径
+                    ry: 6, // 椭圆箭头的 y 半径
+                },
+                },
             },
-            // 如果没有 args 参数，可以简写写 connector: 'rounded'
-            connector: {
-                name: 'rounded',
-                args: {},
-            },
-          })
+        vertices: [
+        { x: 300, y: 200 },
+        { x: 300, y: 120 },
+        ],
+        router: {
+            // 经过 orth 路由处理后，边的每一条链接线段都是水平或垂直的。
+            name: 'orth',
+            args: {},
+        },
+        // 如果没有 args 参数，可以简写写 connector: 'rounded'
+        connector: {
+            name: 'rounded',
+            args: {},
+        },
+        })
+
+        
+
+
     }
 
 
