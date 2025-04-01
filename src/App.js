@@ -66,6 +66,7 @@ const App = () => {
 
     const handleAddNode = (graph) => {
         const node = graph.addNode({
+            id: 'addNode1',
             shape: 'rect',
             x: 200,
             y: 150,
@@ -82,6 +83,7 @@ const App = () => {
         }, 5000)
 
         graph.addNode({
+            id: 'addNode2',
             shape: 'polyline',
             x: 380,
             y: 150,
@@ -96,6 +98,40 @@ const App = () => {
                 refPoints: '0,0 0,10 10,10 10,0',
               },
               label: commonAttrs.label,
+            },
+          })
+
+          graph.addEdge({
+            source: 'addNode1', // 源节点 ID
+            target: 'addNode2', // 目标节点 ID
+            labels: [
+                {
+                    attrs: {
+                    label: {
+                        text: 'edge',
+                    },
+                    },
+                },
+            ],
+            attrs: {
+                line: {
+                  stroke: '#8f8f8f',
+                  strokeWidth: 1,
+                },
+              },
+            vertices: [
+            { x: 300, y: 200 },
+            { x: 300, y: 120 },
+            ],
+            router: {
+                // 经过 orth 路由处理后，边的每一条链接线段都是水平或垂直的。
+                name: 'orth',
+                args: {},
+            },
+            // 如果没有 args 参数，可以简写写 connector: 'rounded'
+            connector: {
+                name: 'rounded',
+                args: {},
             },
           })
     }
