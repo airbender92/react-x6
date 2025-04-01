@@ -4,7 +4,7 @@ import { Dropdown} from 'antd'
 
 const CustomComponent = ({node}) => {
 const label = node.prop('label')
-
+const color = node.attr('body/fill'); 
 return (
     <Dropdown
         menu={{
@@ -25,7 +25,7 @@ return (
         }}
         trigger={['contextMenu']}
     >
-        <div className="custom-react-node">{label}</div>
+        <div className="custom-react-node" style={{ backgroundColor: color }}>{label}</div>
     </Dropdown>
 )
 

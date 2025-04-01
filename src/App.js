@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
-import { Graph } from '@antv/x6';
+import { Graph, Color } from '@antv/x6';
 import './components/x6/CustomComponent'
+import './utils/index'
 import data from './data';
 import Toolbar from './Toolbar';
 import './App.css';
@@ -64,7 +65,7 @@ const App = () => {
     }, []);
 
     const handleAddNode = (graph) => {
-        graph.addNode({
+        const node = graph.addNode({
             shape: 'rect',
             x: 200,
             y: 150,
@@ -73,6 +74,12 @@ const App = () => {
             label: 'rect',
             attrs: commonAttrs
         })
+        console.log('node.prop()', node.prop())
+
+        setTimeout(() => {
+            node.prop('size', { width: 120, height: 50 }) // 修改 x 坐标
+            node.attr('body/fill', '#000') 
+        }, 5000)
 
         graph.addNode({
             shape: 'polyline',
@@ -84,6 +91,8 @@ const App = () => {
             attrs: {
               body: {
                 ...commonAttrs.body,
+                // 在 @antv/x6 中， refPoints 属性通常用于定义多边形（如 polyline 折线形状）的顶点位置
+                // polyline 形状会按照这些点的顺序连接起来，形成一个封闭或开放的折线图形。
                 refPoints: '0,0 0,10 10,10 10,0',
               },
               label: commonAttrs.label,
@@ -133,6 +142,27 @@ const App = () => {
         }
     }
 
+    const handleProp = () => {
+        if (graphInstance.current) {
+            const nodes = graphInstance.current.getNodes();
+            nodes.forEach(node => {
+                const width = 100 + Math.floor(Math.random() * 50);
+                const height = 40 + Math.floor(Math.random() * 50);
+                node.prop('size', {width, height})
+            })
+        }
+    }
+
+    const handleAttr = () => {
+        if (graphInstance.current) {
+            const nodes = graphInstance.current.getNodes();
+           nodes.forEach(node => {
+            const color = Color.random().toHex();
+            node.attr('body/fill', color)
+           })
+        }
+    }
+
     return (
         <div className='react-shape-app'>
             <Toolbar 
@@ -141,6 +171,8 @@ const App = () => {
             onToJSON={handleToJSON} 
             onZoomFit={handleZoomFit}
             onCenterContent={handleCenterContent} 
+            onProp={handleProp}
+            onAttr={handleAttr}
             />
             <div style={{width:'100%', height:'100%'}}>
             <div className='app-content' ref={graphRef} style={{ width: '100%', height: '600px' }}></div>

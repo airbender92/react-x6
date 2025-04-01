@@ -5,7 +5,7 @@ const data = {
         x: 140,
         y: 40,
         shape: 'custom-react-node',
-        label: 'hello'
+        label: 'hello',
       },
       {
         id: 'node2',
@@ -13,21 +13,8 @@ const data = {
         y: 240,
         width: 100,
         height: 40,
-        attrs: {
-          body: {
-            fill: '#F39C12',
-            stroke: '#000',
-            rx: 16,
-            ry: 16,
-          },
-          label: {
-            text: 'World',
-            fill: '#333',
-            fontSize: 18,
-            fontWeight: 'bold',
-            fontVariant: 'small-caps',
-          },
-        },
+       shape: 'custom-node',
+        label: 'hello2'
       },
     ],
     edges: [
