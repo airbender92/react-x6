@@ -7,7 +7,7 @@ import Toolbar from './Toolbar';
 import './App.css';
 import { Snapline } from '@antv/x6-plugin-snapline';
 import '@antv/x6-react-components/es/split-box/style/index.css'
-
+import portConfig from './utils/portConfig'
 
 const commonAttrs = {
     // 这个对象包含了图形元素主体部分的样式属性
@@ -32,6 +32,8 @@ const commonAttrs = {
 }
 
 
+
+
 const App = () => {
     const graphRef = useRef(null);
     const graphInstance = useRef(null);
@@ -39,6 +41,94 @@ const App = () => {
     useEffect(() => {
         const graph = new Graph({
             container: graphRef.current,
+            highlighting: {
+                // 连接桩可以被连接时在连接桩外围围渲染一个包围框
+                magnetAvailable: {
+                  name: 'stroke',
+                  args: {
+                    attrs: {
+                      fill: 'transparent',
+                      stroke: '#A4DEB1',
+                      strokeWidth: 4,
+                    },
+                  },
+                },
+                // 连接桩吸附连线时在连接桩外围围渲染一个包围框
+                magnetAdsorbed: {
+                  name: 'stroke',
+                  args: {
+                    attrs: {
+                      fill: 'transparent',
+                      stroke: '#31d0c6',
+                      strokeWidth: 4,
+                    },
+                  },
+                },
+              },
+            connecting: {
+                router: 'orth',
+                connector: 'rounded',
+                createEdge() {
+                    return this.createEdge({
+                      shape: 'edge',
+                      attrs: {
+                        line: {
+                          stroke: '#8f8f8f',
+                          strokeWidth: 1,
+                        },
+                      },
+                    })
+                  },
+                allowNode(args) {
+                    console.log('allowNode', args)
+                    return false;
+                  },
+                allowMulti: false,
+                allowBlank: false,
+                allowLoop: false,
+                allowEdge: false,
+                allowPort(args){
+                    console.log('allowPort', args)
+                    const { sourceCell, targetCell } = args;
+                    if (sourceCell === targetCell) {
+                        return false; // 若相同，禁止连线
+                    }
+                    if (sourceCell && targetCell) {
+                        const existingEdges = graph.getEdges();
+                        for (let i = 0; i < existingEdges.length; i++) {
+                            const edge = existingEdges[i];
+                            const currentSource = edge.getSourceCell();
+                            const currentTarget = edge.getTargetCell();
+                            if (
+                                currentSource === sourceCell &&
+                                currentTarget === targetCell ||
+                                (currentSource === targetCell &&
+                                    currentTarget === sourceCell
+                                )
+                            ) {
+                                return false; // 如果已经有连线，不允许再次连线
+                            }
+                        }
+                    }
+                    return true;
+                },
+                 // 添加 validateXXX 方法
+                 validateMagnet({ cell, magnet }) {
+                    // 示例逻辑：如果是特定节点类型，允许创建边
+                    if (cell.shape === 'rect') {
+                        return true;
+                    }
+                    // return false;
+                    return true
+                },
+                validateConnection({ sourceCell, targetCell, sourceMagnet, targetMagnet }) {
+                    // 示例逻辑：源节点和目标节点不能是同一类型
+                    if (sourceCell.shape === targetCell.shape) {
+                        return true;
+                    }
+                    return true;
+                },
+            },
             grid: {
                 visible: true,
                 size: 10
@@ -56,6 +146,8 @@ const App = () => {
             })
         )
         graph.fromJSON(data);
+
+       
         handleAddNode(graph);
         graphInstance.current = graph;
 
@@ -73,7 +165,8 @@ const App = () => {
             width: 80,
             height: 40,
             label: 'rect',
-            attrs: commonAttrs
+            attrs: commonAttrs,
+            ports: portConfig
         })
         console.log('node.prop()', node.prop())
 

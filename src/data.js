@@ -1,5 +1,4 @@
-import { stroke } from "@antv/x6/lib/registry/highlighter/stroke";
-
+import portConfig from "./utils/portConfig";
 const data = {
     nodes: [
       {
@@ -8,6 +7,7 @@ const data = {
         y: 40,
         shape: 'custom-react-node',
         label: 'hello',
+        ports: portConfig,
       },
       {
         id: 'node2',
@@ -16,7 +16,8 @@ const data = {
         width: 100,
         height: 40,
        shape: 'custom-node',
-        label: 'hello2'
+        label: 'hello2',
+        ports: portConfig,
       },
       {
         id: 'node3',
@@ -25,7 +26,8 @@ const data = {
         width: 100,
         height: 40,
        shape: 'rect',
-        label: 'node3'
+        label: 'node3',
+        ports: portConfig,
       },
       {
         id: 'node4',
@@ -34,7 +36,8 @@ const data = {
         width: 100,
         height: 40,
        shape: 'rect',
-        label: 'node4'
+        label: 'node4',
+        ports: portConfig,
       },
       {
         id: 'node5',
@@ -69,8 +72,8 @@ const data = {
     ],
     edges: [
       {
-        source: 'node1',
-        target: 'node2',
+        source: {cell: 'node1', port: 'port_right'},
+        target: {cell: 'node2', port: 'port_left'},
       },
       {
         shape: 'double-edge',
