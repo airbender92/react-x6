@@ -8,6 +8,7 @@ import './App.css';
 import { Snapline } from '@antv/x6-plugin-snapline';
 import '@antv/x6-react-components/es/split-box/style/index.css'
 import portConfig from './utils/portConfig'
+import trash from './assets/trash.svg';
 
 const commonAttrs = {
     // 这个对象包含了图形元素主体部分的样式属性
@@ -151,6 +152,11 @@ const App = () => {
         handleAddNode(graph);
         graphInstance.current = graph;
 
+        graph.on('node:delete', ({ view, e }) => {
+            e.stopPropagation()
+            view.cell.remove()
+          })
+
         return () => {
             graph.dispose();
         };
@@ -164,16 +170,16 @@ const App = () => {
             y: 150,
             width: 80,
             height: 40,
-            label: 'rect',
+            label: 'rectA',
             attrs: commonAttrs,
             ports: portConfig
         })
         console.log('node.prop()', node.prop())
 
-        setTimeout(() => {
-            node.prop('size', { width: 120, height: 50 }) // 修改 x 坐标
-            node.attr('body/fill', '#000') 
-        }, 5000)
+        // setTimeout(() => {
+        //     node.prop('size', { width: 120, height: 50 }) // 修改 x 坐标
+        //     node.attr('body/fill', '#000') 
+        // }, 5000)
 
         graph.addNode({
             id: 'addNode2',

@@ -45,7 +45,7 @@ const data = {
         y: 40,
         width: 100,
         height: 40,
-       shape: 'custom-node-width-port',
+        shape: 'custom-node-width-port',
         label: 'node5',
         ports: {
           items: [
@@ -68,6 +68,20 @@ const data = {
             {id: 'port_4', group: 'top'},
           ]
         }
+      },
+      {
+        id: 'node7',
+        x: 540,
+        y: 40,
+        width: 100,
+        height: 40,
+        shape: 'custom-click-node',
+        attrs: {
+          label: {
+            text: 'node7'
+          }
+        },
+        ports: portConfig,
       },
     ],
     edges: [
