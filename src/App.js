@@ -218,6 +218,49 @@ const App = () => {
         }
     }
 
+    const handleLineAttr = () => {
+        if (graphInstance.current) {
+            const edges = graphInstance.current.getEdges();
+            edges.forEach(edge => {
+                const color = Color.random().toHex();
+                edge.attr('line/stroke', color)
+            })
+        }
+    }
+
+    const handleAddPort = () => {
+        if (graphInstance.current) {
+            const node = graphInstance.current.getCellById('node5')
+            const ports = node.getPorts()
+            const newPort = {
+                id: `port_${ports.length + 1}`,
+                group: 'bottom'
+            }
+            node.addPort(newPort)
+        }
+    }   
+    const handleRemovePort = () => {
+        if (graphInstance.current) {
+            const node = graphInstance.current.getCellById('node5')
+            const ports = node.getPorts()
+            if (ports.length > 0) {
+                node.removePort(ports[ports.length - 1].id)
+            }
+        }   
+    }
+
+    const handleUpdatePort = () => {
+        const color = Color.random().toHex()
+        if (graphInstance.current) {
+            const node = graphInstance.current.getCellById('node5')
+            const ports = node.getPorts()
+            if (ports.length > 0) {
+                const port = ports[ports.length - 1]
+                node.portProp(port.id, 'attrs/circle/stroke', color)
+            }
+        }
+    }
+
     return (
         <div className='react-shape-app'>
             <Toolbar 
@@ -228,6 +271,10 @@ const App = () => {
             onCenterContent={handleCenterContent} 
             onProp={handleProp}
             onAttr={handleAttr}
+            onLineAttr={handleLineAttr}
+            onAddPort={handleAddPort}
+            onRemovePort={handleRemovePort}
+            onUpdatePort={handleUpdatePort}
             />
             <div style={{width:'100%', height:'100%'}}>
             <div className='app-content' ref={graphRef} style={{ width: '100%', height: '600px' }}></div>
