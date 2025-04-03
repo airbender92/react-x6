@@ -8,7 +8,8 @@ import './App.css';
 import { Snapline } from '@antv/x6-plugin-snapline';
 import '@antv/x6-react-components/es/split-box/style/index.css'
 import portConfig from './utils/portConfig'
-import trash from './assets/trash.svg';
+import { Group } from './utils/shape'
+import { stroke } from '@antv/x6/lib/registry/highlighter/stroke';
 
 const commonAttrs = {
     // 这个对象包含了图形元素主体部分的样式属性
@@ -170,6 +171,7 @@ const App = () => {
         handleAddNodeWithTool(graph);
         handleDynamicTool(graph)
         handleParentNodes(graph)
+        handleCreateGroup(graph)
 
         graphInstance.current = graph;
 
@@ -590,6 +592,128 @@ const App = () => {
                 node.portProp(port.id, 'attrs/circle/stroke', color)
             }
         }
+    }
+
+  
+    const handleCreateGroup = (graph) => {
+          /**
+     * - createGroup 函数用于创建一个分组节点。它接受分组的 id 、位置（ x , y ）、大小（ width , height ）和填充颜色（ fill ）作为参数。
+- 使用 new Group 创建一个分组实例，并设置其属性。
+- 将分组添加到图形中，并返回该分组实例。
+     * @param {*} graph 
+     */
+        const createGroup = (
+            id,
+            x,
+            y,
+            width,
+            height,
+            fill,
+        ) => {
+            const group = new Group({
+                id,
+                x,
+                y,
+                width,
+                height,
+                attrs: {
+                    body: {fill},
+                    label: { text: id},
+                }
+            })
+            graph.addNode(group)
+            return group;
+        }
+
+        const createNode = (
+            id,
+            x,
+            y,
+            width,
+            height,
+        ) => {
+            return graph.addNode({
+                shape: 'custom-group-node',
+                id,
+                x,
+                y,
+                width,
+                height,
+                label: id,
+            })
+        }
+
+        const createEdge = (
+            id,
+            source,
+            target,
+            vertices,
+        ) => {
+            return graph.addEdge({
+                id,
+                source,
+                target,
+                vertices,
+                label: id,
+                attrs: {
+                    line: {
+                        stroke: '#8f8f8f',
+                        strokeWidth: 1,
+                    }
+                }
+            })
+        }
+        // 创建一个名为 'a' 的分组，位置在 (100, 40)，大小为 480x280，填充颜色为 '#91d5ff'
+        const a = createGroup('a', 100, 40, 480, 280, '#91d5ff')
+        const aa = createGroup('aa', 180, 100, 160, 140, '#47C769')
+        const aaa = createGroup('aaa', 200, 160, 120, 40, '#0491e4')
+        const b = createNode('b', 450, 200, 50, 50)
+        // 将分组 'aa' 添加为分组 'a' 的子元素
+        a.addChild(aa)
+        aa.addChild(aaa)
+        aaa.addChild(b)
+
+        createNode('c', 680, 80, 50, 50);
+        createEdge('edge1', 'aa', 'b')
+        createEdge('edge3', 'b', 'c')
+        // 创建一条名为 'edge2' 的边，连接分组 'aa' 和分组 'aaa'，并指定了两个顶点 (60, 140) 和 (60, 220)
+// 然后将这条边添加为分组 'aa' 的子元素
+        aa.addChild(
+            createEdge('edge2', 'aa', 'aaa', [
+                { x: 60, y: 140 },
+                { x: 60, y: 220 },
+            ])
+        )
+
+        graph.on('node:collapse', ({node}) => {
+            node.toggleCollapse()
+            const collapsed = node.isCollapsed()
+             // 定义一个递归函数，用于处理节点的子节点的显示和隐藏
+            const collapse = (parent) => {
+                // 获取父节点的所有子节点
+                const cells = parent.getChildren()
+                if(cells) {
+                      // 遍历每个子节点
+                    cells.forEach(cell => {
+                         // 根据父节点的折叠状态决定子节点的显示或隐藏
+                        if(collapsed) {
+                            cell.hide()
+                        } else {
+                            cell.show()
+                        }
+                          // 如果子节点是 Group 类型
+                        if(cell instanceof Group) {
+                              // 若子节点未处于折叠状态
+                            if(!cell.isCollapsed()) {
+                                // 递归调用 collapse 函数，处理该子节点的子节点
+                                collapse(cell)
+                            }
+                        }
+                    })
+                }
+            }
+            collapse(node)
+        })
     }
 
     return (

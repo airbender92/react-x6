@@ -213,6 +213,21 @@ Graph.registerNode(
     true
 )
 
+Graph.registerNode('custom-group-node', {
+    inherit: 'rect',
+    width: 100,
+    height: 40,
+    attrs: {
+        body: {
+            stroke: '#8f8f8f',
+            strokeWidth: 1,
+            fill: '#fff',
+            rx: 6,
+            ry: 6,
+        }
+    }
+}, true)
+
 Graph.registerEdge('double-edge', {
     inherit: 'edge',
      // 定义边的组成结构，这里是一个包含多个元素的数组
