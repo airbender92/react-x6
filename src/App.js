@@ -139,7 +139,24 @@ const App = () => {
             },
             autoResize: true,
             panning: true,
-            mousewheel: true
+            mousewheel: true,
+            embedding: {
+                enabled: true,
+            },
+            translating: {
+                restrict(view){
+                    if(view) {
+                        const cell = view.cell;
+                        if(cell.isNode()){
+                            const parent = cell.getParent();
+                            if(parent) {
+                                return parent.getBBox();
+                            }
+                        }
+                    }
+                    return null;
+                }
+            }
         });
         graph.use(
             new Snapline({
@@ -150,12 +167,139 @@ const App = () => {
 
        
         handleAddNode(graph);
+        handleAddNodeWithTool(graph);
+        handleDynamicTool(graph)
+        handleParentNodes(graph)
+
         graphInstance.current = graph;
 
         graph.on('node:delete', ({ view, e }) => {
             e.stopPropagation()
             view.cell.remove()
           })
+
+
+        graph.on('cell:mouseenter', ({cell}) => {
+            if(cell.isNode()){
+                cell.addTools([
+                    {
+                        name: 'boundary',
+                        args: {
+                            fill: '#7c68fc',
+                            stroke: '#7c68fc',
+                            'stroke-width': 1,
+                            'fill-opacity': 0.1,
+                        }
+                    },
+                    {
+                        name: 'button-remove',
+                        args: {
+                            x: 0,
+                            y: 0,
+                            offset: {x: 10, y: 10},
+                        }
+                    }
+                ])
+            } else {
+                cell.addTools([
+                    'vertices', 'segments'
+                ])
+            }
+        })
+
+        graph.on('cell:mouseleave', ({cell}) => {
+            cell.removeTools()
+        })
+
+        // 监听节点位置改变事件，当节点位置改变时触发回调函数
+        graph.on('node:change:position', ({node, options}) => {
+             // 如果 options 中包含 skipParentHandler 且为 true，则直接返回，不执行后续逻辑
+            if(options.skipParentHandler){
+                return;
+            }
+             // 获取节点的所有子节点
+            const children = node.getChildren();
+            if(children && children.length > 0) {
+                 // 将节点当前的位置保存到节点的 originPosition 属性中
+                node.prop('originPosition', node.getPosition())
+            }
+            // 获取节点的父节点
+            const parent = node.getParent();
+            if(parent && parent.isNode()) {
+                 // 获取父节点的 originSize 属性
+                let originSize = parent.prop('originSize');
+                 // 如果 originSize 属性不存在
+                if(!originSize) {
+                     // 获取父节点当前的大小
+                    originSize = parent.getSize();
+                     // 将父节点当前的大小保存到 originSize 属性中
+                    parent.prop('originSize', originSize)
+                }
+                // 获取父节点的 originPosition 属性
+                let originPosition = parent.prop('originPosition');
+                if(!originPosition) {
+                     // 获取父节点当前的位置
+                    originPosition = parent.getPosition();
+                     // 将父节点当前的位置保存到 originPosition 属性中
+                    parent.prop('originPosition', originPosition)
+                }
+                 // 初始化父节点新的左上角 x 坐标为原始位置的 x 坐标
+                let x = originPosition.x;
+                  // 初始化父节点新的左上角 y 坐标为原始位置的 y 坐标
+                let y = originPosition.y;
+                 // 初始化父节点新的右下角 x 坐标为原始位置的 x 坐标加上原始宽度
+                let cornerX = originPosition.x + originSize.width;
+                // 初始化父节点新的右下角 y 坐标为原始位置的 y 坐标加上原始高度
+                let cornerY = originPosition.y + originSize.height;
+                 // 初始化一个标志位，用于标记父节点的大小或位置是否发生改变
+                let hasChange = false;
+                const children = parent.getChildren();
+                if(children) {
+                    children.forEach(child => {
+                         // 获取子节点的边界框，并向外扩展 20 个单位
+                        const bbox = child.getBBox().inflate(20);
+                         // 获取子节点边界框的右下角坐标
+                        const corner = bbox.getCorner();
+                        // 如果子节点边界框的左上角 x 坐标小于当前父节点新的左上角 x 坐标
+                        if(bbox.x < x) {
+                             // 更新父节点新的左上角 x 坐标
+                            x = bbox.x;
+                             // 标记父节点的大小或位置发生改变
+                            hasChange = true;
+                        }
+                         // 如果子节点边界框的左上角 y 坐标小于当前父节点新的左上角 y 坐标
+                        if(bbox.y < y) {
+                              // 更新父节点新的左上角 y 坐标
+                            y = bbox.y;
+                            hasChange = true;
+                        }
+                         // 如果子节点边界框的右下角 x 坐标大于当前父节点新的右下角 x 坐标
+                        if(corner.x > cornerX) {
+                            // 更新父节点新的右下角 x 坐标
+                            cornerX = corner.x;
+                            hasChange = true;
+                        }
+                         // 如果子节点边界框的右下角 y 坐标大于当前父节点新的右下角 y 坐标
+                        if(corner.y > cornerY) {
+                            cornerY = corner.y;
+                            hasChange = true;
+                        }
+                    })
+                }
+                 // 如果父节点的大小或位置发生改变
+                if(hasChange){
+                    parent.prop(
+                        {
+                            position: {x, y},
+                             // 计算并更新父节点的新宽度和高度
+                            size: {width: cornerX - x, height: cornerY - y},
+                        },
+                         // 传递选项，跳过父节点处理逻辑，避免无限循环
+                        {skipParentHandler: true}
+                    )
+                }
+            }
+        })
 
         return () => {
             graph.dispose();
@@ -252,6 +396,94 @@ const App = () => {
         
 
 
+    }
+
+    const handleAddNodeWithTool = (graph) => {
+        const node1 = graph.addNode({
+            x: 300,
+            y: 300,
+            shape: 'rect',
+            width: 100,
+            height: 40,
+            label: 'sourceA',
+            tools: [{
+                name: 'button-remove',
+                args: {
+                    x: '100%',
+                    y: 0,
+                }
+            }]
+        });
+
+        const node2 = graph.addNode({
+            x: 500,
+            y: 300,
+            shape: 'rect',
+            width: 100,
+            height: 40,
+            label: 'sourceB',
+            tools: [{
+                name: 'button-remove',
+                args: {
+                    x: '100%',
+                    y: 0,
+                }
+            }]
+        })
+
+        graph.addEdge({
+            source: node1,
+            target: node2,
+          
+            tools: ['vertices', 'segments']
+        })
+    }
+
+
+    const handleDynamicTool = (graph) => {
+        const soruce = graph.addNode({
+            shape: 'rect',
+            x: 400,
+            y: 500,
+            width: 100,
+            height: 40,
+            label: 'source',
+        })
+        const target = graph.addNode({
+            shape:'rect',
+            x: 600,
+            y: 500,
+            width: 100,
+            height: 40,
+            label:'target',
+        })
+        const edge = graph.addEdge({
+            source: soruce,
+            target: target,
+        })
+    }
+
+    const handleParentNodes = (graph) => {
+        const child = graph.addNode({
+            shape: 'rect',
+            x: 750,
+            y: 400,
+            width: 100,
+            height: 40,
+            label: 'child',
+            zIndex: 2,
+        })
+
+        const parent = graph.addNode({
+            shape:'rect',
+            x: 700,
+            y: 400,
+            width: 240,
+            height: 140,
+            label: 'parent',
+            zIndex: 1,
+        })
+        parent.addChild(child)
     }
 
 
