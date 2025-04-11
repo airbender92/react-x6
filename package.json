@@ -12,10 +12,13 @@
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^13.5.0",
     "antd": "^5.24.5",
+    "dom-to-image": "^2.6.0",
     "langchain": "^0.3.19",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-org-tree": "^1.0.1",
     "react-scripts": "5.0.1",
+    "wangeditor": "^4.7.15",
     "web-vitals": "^2.1.4"
   },
   "scripts": {

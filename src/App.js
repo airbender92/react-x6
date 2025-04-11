@@ -9,7 +9,7 @@ import { Snapline } from '@antv/x6-plugin-snapline';
 import '@antv/x6-react-components/es/split-box/style/index.css'
 import portConfig from './utils/portConfig'
 import { Group } from './utils/shape'
-import { stroke } from '@antv/x6/lib/registry/highlighter/stroke';
+import DocumentEditor from './components/DocumentEditor';
 
 const commonAttrs = {
     // 这个对象包含了图形元素主体部分的样式属性
@@ -735,6 +735,7 @@ const App = () => {
             <div className='app-content' ref={graphRef} style={{ width: '100%', height: '600px' }}></div>
             </div>
            
+           <DocumentEditor />
     
         </div>
     );
