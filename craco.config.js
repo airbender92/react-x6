@@ -12,6 +12,21 @@ module.exports = {
       '@hooks': path.resolve(__dirname, 'src/hooks'),
     },
     configure: (webpackConfig) => {
+      // Add this rule for chinese-days
+      webpackConfig.module.rules.push({
+        test: /\.m?js$/,
+        include: /node_modules[\\/]chinese-days/,
+        type: 'javascript/auto',
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['@babel/preset-env', { modules: 'auto' }]
+            ]
+          }
+        }
+      });
+
       // 添加less支持
       const lessRule = {
         test: /\.less$/,
