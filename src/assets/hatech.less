@@ -1,0 +1,281 @@
+
+html {
+  width: 100%;
+  height: 100%;
+}
+body {
+  width: 100%;
+  // margin: 0;
+  // padding: 0;
+  // height: 100%;
+  // overflow: hidden;
+  font-size: ha-map-get($theme-sizes, system-font-size);
+  // color: ha-map-get($theme-colors, system-font-color);
+  font-family: ha-map-get($theme-setting, system-font-family);
+}
+// 绕过自动填充样式覆盖
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  transition: color 9999999s ease-out, background-color 99999s ease-out;
+  transition-delay: 9999999s;
+}
+ul,
+li {
+  outline-style: none;
+  list-style: none;
+}
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+  &:hover {
+    width: 5px;
+    // height: 10px;
+  }
+}
+*::-webkit-scrollbar-thumb {
+  border-radius: 5px;
+  background: var(--scrollbar-background-color);
+  &:hover {
+    width: 10px;
+    height: 10px;
+  }
+}
+*::-webkit-scrollbar-track {
+  // background: ha-map-get($theme-colors, system-background-color);
+}
+
+table {
+  border-color: ha-map-get($theme-colors, table-border-color);
+}
+
+// 标准页面布局
+.ha-page {
+  color: ha-map-get($theme-colors, page-color);
+  height: 100%;
+  overflow: auto;
+}
+.ha-page-split-right-view {
+  height: calc(100vh - 120px);
+}
+.ha-page-title-view {
+  display: flex;
+  .title-left-view {
+    flex: 1;
+    .title-text {
+      font-size: 18px;
+    }
+  }
+  .title-right-view {
+    flex: 1;
+    flex-direction: row-reverse;
+    display: flex;
+    .title-right-view-space {
+      flex: 1;
+    }
+    .title-right-view-button {
+      min-width: 80px;
+    }
+  }
+}
+.ha-page-header-view {
+  margin-top: 10px;
+  background: ha-map-get($theme-colors, component-background-color);
+  box-shadow: ha-map-get($theme-colors, component-box-shadow);
+  border: 1px solid ha-map-get($theme-colors, component-border-color);
+  padding: 20px;
+  // .header-search-panel {
+  // }
+  .header-buttons-panel {
+    margin-top: 10px;
+  }
+}
+.ha-page-content-view {
+  margin: 15px 0 20px;
+  padding: 20px;
+  height: 100%;
+  overflow: auto;
+  background: ha-map-get($theme-colors, component-background-color);
+  box-shadow: ha-map-get($theme-colors, component-box-shadow);
+  border: 1px solid ha-map-get($theme-colors, component-border-color);
+  .content-header-panel {
+    margin-bottom: 5px;
+  }
+  .concent-table-panel {
+    overflow: auto;
+  }
+  .footer-pagination-panel {
+    margin: 10px auto;
+    text-align: center;
+  }
+}
+
+.ha-component-view {
+  @include ha-component-view();
+}
+
+.svg-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.2em;
+  fill: currentColor;
+  overflow: hidden;
+  color: ha-map-get($theme-colors, system-font-color);
+  font-size: ha-map-get($theme-sizes, system-icon-size);
+}
+
+.span-ellipsis {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  i {
+    margin-right: 2px;
+  }
+}
+
+/**
+ * 系统十二宫格布局设定
+ */
+@for $i from 1 through 12 {
+  .hatech-cell-#{$i} {
+    width: calc((100% / 12 * #{$i}));
+    float: left;
+  }
+}
+
+/**
+ * 表格数据格式化时，鼠标悬浮样式（不带小手样式）
+ */
+.hatech-fmt {
+  @include table-data-formatter(auto);
+}
+
+/**
+ * 解决element-ui的table表格控件表头与内容列不对齐问题
+ */
+ ::v-deep  .el-table th.gutter{
+  display: table-cell!important;
+}
+
+
+/**
+ * 覆盖默认字体样式
+ */
+input,
+textarea,
+select {
+  border: 1px solid #ccc;
+  font-family: inherit;
+  font-size: inherit;
+  font-size: 100%;
+  font-weight: inherit;
+  outline: none;
+  -moz-border-radius: 1px;
+  -webkit-border-radius: 1px;
+  border-radius: 1px;
+}
+@mixin input-focus {
+  -moz-outline: 1px solid #e74c3c;
+  -moz-outline-radius: 1px;
+  border-color: #e74c3c;
+  outline: 1px solid #e74c3c;
+  -webkit-border-radius: 1px;
+  border-radius: 1px;
+}
+input:focus {
+  @include input-focus;
+}
+select:focus {
+  @include input-focus;
+}
+textarea:focus {
+  @include input-focus;
+}
+
+body ::v-deep  #hatech {
+  /**
+   * 输入框超出宽度显示省略号
+   */
+  .el-input__inner {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  /**
+   * 下拉框的列表长度如果过长显示省略号
+  */
+  .el-select-dropdown {
+    position: absolute !important;
+    left: 0 !important;
+    top: 40px !important;
+    width: 100%;
+    .el-select-dropdown__item {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+  /**
+   * 多选框标签内容长度过长
+   */
+  .el-tag.el-tag--info {
+    display: flex;
+    align-items: center;
+  }
+  .el-select__tags-text {
+    max-width: 200px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  /**
+   * 有输入长度显示的输入框增加右边padding，防止文字遮挡字数显示
+   */
+  .has-right-padding {
+    input {
+      padding-right: 54px !important;
+    }
+  }
+  /**
+   * 覆盖时间区间选择器的弹窗hover颜色
+   */
+  .el-time-spinner__wrapper.is-arrow .el-time-spinner__item:hover:not(.disabled):not(.active) {
+    background: #0f74e3 !important;
+  }
+}
+body ::v-deep  {
+  //日期禁止白色底色修改
+  .el-date-table td.disabled div {
+    background-color: rgba(0, 0, 0, 0) !important;
+  }
+}
+
+/*
+*暂无数据颜色设置
+*/
+.nodata {
+  color: #909399;
+}
+/*
+*自定义必填星标志
+*/
+.commonRequired:before {
+  content: '*';
+  color: #f56c6c;
+  margin-right: 4px;
+}
+/*
+* 代码编辑器样式设置
+*/
+.vue-codemirror{
+  line-height: 20px;
+}
+.el-select,
+.el-cascader {
+  width: 100%;
+}
+.el-cascader__search-input{
+  background-color: var(--input-background-color);
+}
