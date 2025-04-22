@@ -1,13 +1,15 @@
 import React from 'react';
 import { Layout, Row, Col } from 'antd';
 import { Calendar, Badge, ConfigProvider } from 'antd';
-import EChartsWrapper from './EchartsWrapper';
-import './index.less';
 import zhCN from 'antd/es/locale/zh_CN';
 import moment from 'moment';
 import 'moment/locale/zh-cn';
+import EChartsWrapper from './EchartsWrapper';
+import './index.less';
 import { getLunarDate } from '@/utils/lunarDateUtils.js';
 import { getSolarTermsInRange } from '@/utils/solarTermsUtils.js';
+import { getHolidayInRange } from '@/utils/holidayUtils.js';
+import {getTraditionalHolidaysInRange} from '@/utils/traditionalUtils';
 
 // 设置 moment 为中文环境
 moment.locale('zh-cn');
@@ -25,13 +27,32 @@ const HomePage = () => {
   const dateCellRender = (value) => {
     const lunarDate = getLunarDate(value.format('YYYY-MM-DD'));
     const solarTerms = getSolarTermsInRange(value.format('YYYY-MM-DD'), value.format('YYYY-MM-DD'));
+    const holidayTerms = getHolidayInRange(value.format('YYYY-MM-DD'), value.format('YYYY-MM-DD'));
+    const traditionalTerms = getTraditionalHolidaysInRange(value.format('YYYY-MM-DD'), value.format('YYYY-MM-DD'));
+    
     const solarTerm = solarTerms.length > 0 ? solarTerms[0].name : null;
+    const traditionalTerm = traditionalTerms.length > 0 ? traditionalTerms[0].name : null;
+    const holidayTerm = holidayTerms.length > 0 ? holidayTerms[0].name : null;
     const drillEvents = DrillData[value.format('YYYYMMDD')] || [];
+
+    let lunarInfo = null;
+    if (lunarDate) {
+      if (lunarDate.lunarDay === 1) {
+        // 初一仅展示月份
+        lunarInfo = lunarDate.lunarMonCN;
+      } else {
+        // 非初一展示日期
+        lunarInfo = lunarDate.lunarDayCN;
+      }
+    }
+
+
+    // 若有节气，优先展示传统节日 - 节气，否则展示农历
+    const dateInfo = traditionalTerm || solarTerm || lunarInfo;
 
     const events = [
       ...drillEvents,
-      ...(lunarDate ? [lunarDate.lunarMonCN + lunarDate.lunarDayCN] : []),
-      ...(solarTerm ? [solarTerm] : [])
+      ...(dateInfo ? [dateInfo] : [])
     ].map((event) => ({
       type: 'default',
       content: event
@@ -45,28 +66,6 @@ const HomePage = () => {
           </li>
         ))}
       </ul>
-    );
-  };
-
-  const headerRender = ({ value }) => {
-    const lunarDate = getLunarDate(value.format('YYYY-MM-DD'));
-    const solarTerms = getSolarTermsInRange(value.format('YYYY-MM-DD'), value.format('YYYY-MM-DD'));
-    const solarTerm = solarTerms.length > 0 ? solarTerms[0].name : null;
-
-    const dateInfo = [
-      value.format('YYYY年MM月DD日'),
-      ...(lunarDate ? [lunarDate.lunarMonCN + lunarDate.lunarDayCN] : []),
-      ...(solarTerm ? [solarTerm] : [])
-    ];
-
-    return (
-      <div style={{ padding: 8 }}>
-        {dateInfo.map((info, index) => (
-          <span key={index} style={{ marginRight: index < dateInfo.length - 1 ? 8 : 0 }}>
-            {info}
-          </span>
-        ))}
-      </div>
     );
   };
 
@@ -104,11 +103,12 @@ const HomePage = () => {
         <Content>
           <Row style={{ height: '50%' }}>
             <Col span={16} style={{ height: '100%' }}>
-              <Calendar 
+            <Calendar dateCellRender={dateCellRender} /> 
+              {/* <Calendar 
                 cellRender={dateCellRender}
                 // headerRender={headerRender}
                 fullscreen // 添加 fullscreen 属性
-              />
+              /> */}
             </Col>
             <Col span={8} style={{ padding: 16 }}>
               <div style={{ height: '100%', overflowY: 'auto' }}>

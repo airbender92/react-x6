@@ -18,7 +18,7 @@ const SOLAR_TERMS_C_NUMS = {
     the_end_of_heat: [23.95, 23.13],
     white_dew: [8.44, 7.646],
     the_autumn_equinox: [23.822, 23.042],
-    code_dew: [9.098, 8.318],
+    cold_dew: [9.098, 8.318],
     frost_descent: [24.218, 23.438],
     the_beginning_of_winter: [8.218, 7.438],
     lesser_snow: [23.08, 22.36],
@@ -39,7 +39,7 @@ const SOLAR_TERMS_MONTH = {
     7: ["lesser_heat", "greater_heat"],
     8: ["the_beginning_of_autumn", "the_end_of_heat"],
     9: ["white_dew", "the_autumn_equinox"],
-    10: ["code_dew", "frost_descent"],
+    10: ["cold_dew", "frost_descent"],
     11: ["the_beginning_of_winter", "lesser_snow"],
     12: ["greater_snow", "the_winter_solstice"],
 };
@@ -90,7 +90,7 @@ const SOLAR_TERMS = {
     the_end_of_heat: "处暑",
     white_dew: "白露",
     the_autumn_equinox: "秋分",
-    code_dew: "寒露",
+    cold_dew: "寒露",
     frost_descent: "霜降",
     the_beginning_of_winter: "立冬",
     lesser_snow: "小雪",
@@ -99,12 +99,12 @@ const SOLAR_TERMS = {
 };
 
 // 包装日期到一天的开始
-export function wrapDate(date) {
+function wrapDate(date) {
     return moment(date).startOf("day");
 }
 
 // 获取节气日期
-export function getSolarTermDate(year, month, term) {
+function getSolarTermDate(year, month, term) {
     const century = year >= 2000 ? 21 : 20;
     const Y = year % 100;
     const D = 0.2422;
@@ -135,7 +135,12 @@ export function getSolarTermsInRange(start, end) {
         const month = current.month() + 1;
         SOLAR_TERMS_MONTH[month].forEach((term) => {
             const solarTermDate = moment(getSolarTermDate(year, month, term));
-            allTerms.push({ term, date: solarTermDate });
+            allTerms.push({ 
+                term, 
+                date: solarTermDate,
+                // 直接获取中文名称
+                name: SOLAR_TERMS[term] 
+            });
         });
         if (current.month() === 11) {
             current = current.add(1, 'year').startOf('year');
@@ -144,25 +149,18 @@ export function getSolarTermsInRange(start, end) {
         }
     }
 
-    // 计算中间的所有日期
-    const deltaDays = [];
-    allTerms.forEach((term, index) => {
-        for (let date = term.date; allTerms[index + 1] && date.isBefore(allTerms[index + 1].date); date = date.add(1, 'day')) {
-            deltaDays.push({ day: date, term: term.term, name: SOLAR_TERMS[term.term], index: date.diff(term.date, 'day') + 1 });
-        }
-    });
-
-    if (!end) end = start;
-    return deltaDays.filter(trem => trem.day.isBetween(start, end, 'day')).map(trem => ({
-        date: trem.day.format('YYYY-MM-DD'),
-        term: trem.term,
-        name: trem.name,
-        index: trem.index
+    // 过滤出在指定范围内的节气
+    return allTerms.filter(term => term.date.isBetween(start, end, 'day', '[]')).map(term => ({
+        date: term.date.format('YYYY-MM-DD'),
+        term: term.term,
+        // 确保返回中文名称
+        name: term.name 
     }));
 }
 
 // 示例使用
-const startDate = '2024-01-01';
-const endDate = '2024-02-29';
-const solarTerms = getSolarTermsInRange(startDate, endDate);
+// 假设 value 是一个 moment 对象
+const value = moment('2024-01-15');
+const solarTerms = getSolarTermsInRange(value.format('YYYY-MM-DD'), value.format('YYYY-MM-DD'));
 console.log(solarTerms);
+    
