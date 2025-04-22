@@ -1,9 +1,11 @@
-import { Table, Button, Form, Input, Popconfirm, Select, message } from 'antd';
+import { Table, Button, Form, Input, Popconfirm, Select, message, Space } from 'antd';
 import update from 'immutability-helper';
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { v4 as uuidv4 } from 'uuid'
+import { DragOutlined} from '@ant-design/icons'
+import './index.less'
 
 const type = 'DraggableBodyRow';
 const EditableContext = React.createContext(null);
@@ -129,6 +131,7 @@ const EditableCell = ({
         >
           <Select
             ref={inputRef}
+            id={`${record.uuid}-${dataIndex}`} // 添加唯一id
             placeholder={`Please select ${title}`}
             onMouseDown={(e) => e.stopPropagation()}
           >
@@ -147,6 +150,7 @@ const EditableCell = ({
         >
           <Input
             ref={inputRef}
+            id={`${record.uuid}-${dataIndex}`} // 添加唯一id
             placeholder={`Please enter ${title}`}
             onMouseDown={(e) => e.stopPropagation()}
           />
@@ -225,9 +229,15 @@ const EditableDragableTable = React.forwardRef(({ mode = 'edit', value }, ref) =
       title: 'Operation',
       dataIndex: 'operation',
       render: (_, record) => (
+        <Space>
+          <a className={'evaluate-drag-handle'}>
+            <DragOutlined />
+          </a>
         <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record.uuid)}>
           <a>Delete</a>
         </Popconfirm>
+          
+        </Space>
       ),
     },
   ];
