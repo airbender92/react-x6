@@ -1,6 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, forwardRef, useImperativeHandle } from 'react';
 
-const ContentEditable = () => {
+const ContentEditable = forwardRef((props, ref) => {
     const editorRef = useRef(null);
     const dropdownRef = useRef(null);
     const [isDropdownVisible, setIsDropdownVisible] = useState(false);
@@ -122,6 +122,34 @@ const ContentEditable = () => {
         setIsDropdownVisible(false);
     };
 
+    // 获取当前 DOM 的 HTML 和文本
+    const getDomContent = () => {
+        const editor = editorRef.current;
+        const html = editor.innerHTML;
+        const text = editor.textContent;
+        console.log('HTML:', html);
+        console.log('文本:', text);
+        return { html, text };
+    };
+
+    // 根据接口返回的真实数据做替换
+    const replaceKeywords = (data) => {
+        const { text } = getDomContent();
+        let replacedText = text;
+        data.forEach(item => {
+            for (const [placeholder, value] of Object.entries(item)) {
+                replacedText = replacedText.replace(new RegExp(placeholder, 'g'), value);
+            }
+        });
+        const editor = editorRef.current;
+        editor.textContent = replacedText;
+    };
+
+    useImperativeHandle(ref, () => ({
+        getDomContent,
+        replaceKeywords
+    }));
+
     return (
         <div>
             <div
@@ -161,9 +189,12 @@ const ContentEditable = () => {
                     ))}
                 </div>
             )}
+            <button onClick={() => getDomContent()}>获取 DOM 内容</button>
+            {/* 这里只是示例，实际中需要从接口获取数据传入 */}
+            <button onClick={() => replaceKeywords([{ '@@关键词1@@': 'abc公司', '@@关键词2@@': '加班' }])}>替换关键词</button>
         </div>
     );
-};
+});
 
 export default ContentEditable;
     
