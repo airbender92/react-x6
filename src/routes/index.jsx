@@ -3,6 +3,7 @@ import App from '@/App';
 import HomePage from '@/pages/HomePage';
 import NotFound from '@/pages/NotFound';
 import EditorPage from '@/pages/EditorPage';
+import UserPage from '@/pages/UserPage';
 
 const router = createBrowserRouter([
   {
@@ -16,6 +17,10 @@ const router = createBrowserRouter([
       {
         path: 'home',
         element: <HomePage />
+      },
+      {
+        path: 'user',
+        element: <UserPage />
       },
       {
         path: 'editor',
