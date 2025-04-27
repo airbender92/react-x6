@@ -5,11 +5,14 @@ import zhCN from 'antd/es/locale/zh_CN';
 import moment from 'moment';
 import 'moment/locale/zh-cn';
 import EChartsWrapper from './EchartsWrapper';
-import './index.less';
+import './index.css';
 import { getLunarDate } from '@/utils/lunarDateUtils.js';
 import { getSolarTermsInRange } from '@/utils/solarTermsUtils.js';
 import { getHolidayInRange } from '@/utils/holidayUtils.js';
 import {getTraditionalHolidaysInRange} from '@/utils/traditionalUtils';
+
+
+
 
 // 设置 moment 为中文环境
 moment.locale('zh-cn');
@@ -18,18 +21,18 @@ const { Content } = Layout;
 
 // 模拟演练数据
 const DrillData = {
-  20221008: ['对抗演练'],
-  20221018: ['演练日'],
+  20250423: ['对抗演练', '对抗演练2', '对抗演练', '对抗演练xxx', '对抗演练', '对抗演练ddd'],
+  20250424: ['演练日'],
   // 其他日期数据...
 };
 
 const HomePage = () => {
   const dateCellRender = (value) => {
+
     const lunarDate = getLunarDate(value.format('YYYY-MM-DD'));
     const solarTerms = getSolarTermsInRange(value.format('YYYY-MM-DD'), value.format('YYYY-MM-DD'));
     const holidayTerms = getHolidayInRange(value.format('YYYY-MM-DD'), value.format('YYYY-MM-DD'));
     const traditionalTerms = getTraditionalHolidaysInRange(value.format('YYYY-MM-DD'), value.format('YYYY-MM-DD'));
-    
     const solarTerm = solarTerms.length > 0 ? solarTerms[0].name : null;
     const traditionalTerm = traditionalTerms.length > 0 ? traditionalTerms[0].name : null;
     const holidayTerm = holidayTerms.length > 0 ? holidayTerms[0].name : null;
@@ -47,18 +50,18 @@ const HomePage = () => {
     }
 
 
-    // 若有节气，优先展示传统节日 - 节气，否则展示农历
-    const dateInfo = traditionalTerm || solarTerm || lunarInfo;
+    // 若有节气，优先展示国际节日- 传统节日 - 节气，否则展示农历
+    const dateInfo = holidayTerm || traditionalTerm || solarTerm || lunarInfo;
 
     const events = [
       ...drillEvents,
-      ...(dateInfo ? [dateInfo] : [])
     ].map((event) => ({
       type: 'default',
       content: event
     }));
 
     return (
+      <>
       <ul className="events">
         {events.map((item) => (
           <li key={item.content}>
@@ -66,6 +69,8 @@ const HomePage = () => {
           </li>
         ))}
       </ul>
+      <div className="lunar-date-info">{dateInfo}</div>
+      </>
     );
   };
 
@@ -104,11 +109,6 @@ const HomePage = () => {
           <Row style={{ height: '50%' }}>
             <Col span={16} style={{ height: '100%' }}>
             <Calendar dateCellRender={dateCellRender} /> 
-              {/* <Calendar 
-                cellRender={dateCellRender}
-                // headerRender={headerRender}
-                fullscreen // 添加 fullscreen 属性
-              /> */}
             </Col>
             <Col span={8} style={{ padding: 16 }}>
               <div style={{ height: '100%', overflowY: 'auto' }}>

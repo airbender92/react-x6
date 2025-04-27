@@ -2,10 +2,22 @@ const moment = require('moment');
 
 // 定义节日信息
 const HOLIDAYS = [
-    // 新年
+    // 元旦
     {
-        name: '新年',
+        name: '元旦',
         getDate: (year) => moment(`${year}-01-01`),
+        type: '国际通用'
+    },
+     // 妇女节（新增，3月8日）
+     {
+        name: '妇女节',
+        getDate: (year) => moment(`${year}-03-08`), // 固定3月8日
+        type: '国际通用'
+    },
+    // 劳动节（新增）
+    {
+        name: '劳动节',
+        getDate: (year) => moment(`${year}-05-01`), // 固定5月1日
         type: '国际通用'
     },
     // 情人节
@@ -20,24 +32,10 @@ const HOLIDAYS = [
         getDate: (year) => moment(`${year}-04-01`),
         type: '国际通用'
     },
-    // 母亲节（美国：5月的第二个星期日）
-    {
-        name: '母亲节',
-        getDate: (year) => {
-            const mayFirst = moment(`${year}-05-01`);
-            const firstSunday = mayFirst.day(7);
-            return firstSunday.clone().add(1, 'week');
-        },
-        type: '国际通用'
-    },
-    // 父亲节（美国：6月的第三个星期日）
-    {
-        name: '父亲节',
-        getDate: (year) => {
-            const juneFirst = moment(`${year}-06-01`);
-            const firstSunday = juneFirst.day(7);
-            return firstSunday.clone().add(2, 'week');
-        },
+      // 国庆节
+      {
+        name: '国庆节',
+        getDate: (year) => moment(`${year}-10-01`),
         type: '国际通用'
     },
     // 万圣节
@@ -46,44 +44,12 @@ const HOLIDAYS = [
         getDate: (year) => moment(`${year}-10-31`),
         type: '国际通用'
     },
-    // 感恩节（美国：11月的第四个星期四）
-    {
-        name: '感恩节',
-        getDate: (year) => {
-            const novemberFirst = moment(`${year}-11-01`);
-            const firstThursday = novemberFirst.day(4);
-            return firstThursday.clone().add(3, 'week');
-        },
-        type: '国际通用'
-    },
     // 圣诞节
     {
         name: '圣诞节',
         getDate: (year) => moment(`${year}-12-25`),
         type: '国际通用'
     },
-    // 复活节（春分月圆后的第一个星期日）
-    {
-        name: '复活节',
-        getDate: (year) => {
-            const a = year % 19;
-            const b = Math.floor(year / 100);
-            const c = year % 100;
-            const d = Math.floor(b / 4);
-            const e = b % 4;
-            const f = Math.floor((b + 8) / 25);
-            const g = Math.floor((b - f + 1) / 3);
-            const h = (19 * a + b - d - g + 15) % 30;
-            const i = Math.floor(c / 4);
-            const k = c % 4;
-            const l = (32 + 2 * e + 2 * i - h - k) % 7;
-            const m = Math.floor((a + 11 * h + 22 * l) / 451);
-            const month = Math.floor((h + l - 7 * m + 114) / 31);
-            const day = ((h + l - 7 * m + 114) % 31) + 1;
-            return moment(`${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`);
-        },
-        type: '国际通用'
-    }
 ];
 
 // 获取指定日期范围内的节日
@@ -110,9 +76,6 @@ export function getHolidayInRange(start, end) {
     return holidaysInRange;
 }
 
-// 示例使用
-// 假设 value 是一个 moment 对象
-const value = moment('2024-01-01');
-const holidays = getHolidayInRange(value.format('YYYY-MM-DD'), value.format('YYYY-MM-DD'));
-console.log(holidays);
-    
+// 示例验证劳动节（2024年5月1日）
+const laborDay2024 = HOLIDAYS.find(h => h.name === '劳动节').getDate(2024);
+console.log(laborDay2024.format('YYYY-MM-DD')); // 输出: 2024-05-01

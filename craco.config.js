@@ -12,6 +12,7 @@ module.exports = {
       '@hooks': path.resolve(__dirname, 'src/hooks'),
     },
     configure: (webpackConfig) => {
+     
       // Add this rule for chinese-days
       webpackConfig.module.rules.push({
         test: /\.m?js$/,
@@ -56,6 +57,8 @@ module.exports = {
 
       // 将less规则插入到rules数组中
       webpackConfig.module.rules.push(lessRule);
+      // 添加 devtool 配置
+      webpackConfig.devtool = 'cheap-module-source-map';
       return webpackConfig;
     },
   },

@@ -31,3 +31,13 @@
   .notes-month section {
     font-size: 28px;
   }
+
+  .custom-calendar .ant-calendar-cell-content {
+    height: 80px; /* 根据需要调整单元格高度 */
+  }
+
+  .lunar-date-info{
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+  }
