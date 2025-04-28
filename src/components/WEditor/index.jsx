@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { changeMode } from "@/redux/actions/weditor";
 
-import ContentEditable from './ContentEditable'
-import UploadLogo from './UploadLogo'
+import CustomEditorText from './CustomEditorText'
+import UploadLogo from './UploadLogo' 
+import CustomTable from './CustomTable';
 
 function WEditor() {
   const dispatch = useDispatch();
@@ -19,8 +20,9 @@ return (
     <span>WEditor组件内部: {mode}</span>
     <button onClick={() => dispatch(changeMode('preview'))}>WEditor组件内部触发preview</button>
     <button onClick={() => dispatch(changeMode('edit'))}>WEditor组件内部触发edit</button>
-    <ContentEditable />
+    <CustomEditorText />
     <UploadLogo />
+    <CustomTable />
   </div>
 )
 }

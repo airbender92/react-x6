@@ -1,6 +1,6 @@
 import React, { useRef, useState, forwardRef, useImperativeHandle } from 'react';
 
-const ContentEditable = forwardRef((props, ref) => {
+const CustomEditorCell = forwardRef((props, ref) => {
     const editorRef = useRef(null);
     const dropdownRef = useRef(null);
     const [isDropdownVisible, setIsDropdownVisible] = useState(false);
@@ -151,7 +151,7 @@ const ContentEditable = forwardRef((props, ref) => {
     }));
 
     return (
-        <div>
+        <>
             <div
                 ref={editorRef}
                 contentEditable
@@ -189,12 +189,11 @@ const ContentEditable = forwardRef((props, ref) => {
                     ))}
                 </div>
             )}
-            <button onClick={() => getDomContent()}>获取 DOM 内容</button>
-            {/* 这里只是示例，实际中需要从接口获取数据传入 */}
-            <button onClick={() => replaceKeywords([{ '@@关键词1@@': 'abc公司', '@@关键词2@@': '加班' }])}>替换关键词</button>
-        </div>
+            {/* <button onClick={() => getDomContent()}>获取 DOM 内容</button> */}
+            {/* <button onClick={() => replaceKeywords([{ '@@关键词1@@': 'abc公司', '@@关键词2@@': '加班' }])}>替换关键词</button> */}
+        </>
     );
 });
 
-export default ContentEditable;
+export default CustomEditorCell;
     
