@@ -1,0 +1,13 @@
+.avatar-uploader{
+  display: flex;
+
+}
+.avatar-uploader.center {
+  justify-content: center;
+}
+.avatar-uploader.flex-start{
+  justify-content: flex-start;
+}
+.avatar-uploader.flex-end{
+  justify-content: flex-end;
+}
