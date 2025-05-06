@@ -4,6 +4,7 @@ import HomePage from '@/pages/HomePage';
 import NotFound from '@/pages/NotFound';
 import EditorPage from '@/pages/EditorPage';
 import UserPage from '@/pages/UserPage';
+import DragPage from '@/pages/DragPage';
 
 const router = createHashRouter([
   {
@@ -25,6 +26,10 @@ const router = createHashRouter([
       {
         path: 'editor',
         element: <EditorPage />
+      },
+      {
+        path: 'drag',
+        element: <DragPage />
       },
       {
         path: '*',
