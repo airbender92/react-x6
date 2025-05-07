@@ -6,6 +6,7 @@ import EditorCell from './EditorCell';
 const ParentComponent = () => {
     const [mode, setMode] = useState('edit'); // ['edit', 'view']
     const [tableData, setTableData] = useState([]); // 保存所有单元格内容：[row][col] = { html: '...', text: '...' }
+    const customTableRef = createRef();
     const MIN_WIDTH = '80px';
     const MIN_HEIGHT = '30px';
 

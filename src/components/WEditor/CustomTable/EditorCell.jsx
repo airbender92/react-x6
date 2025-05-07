@@ -1,4 +1,4 @@
-import React, { useRef, useState, forwardRef, useImperativeHandle } from 'react';
+import React, {useEffect, useRef, useState, forwardRef, useImperativeHandle } from 'react';
 
 const EditorCell = forwardRef((props, ref) => {
     const { mode = 'edit', content = { html: '', text: '' }, onContentChange } = props;

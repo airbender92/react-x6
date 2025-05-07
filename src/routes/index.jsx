@@ -6,6 +6,7 @@ import EditorPage from '@/pages/EditorPage';
 import UserPage from '@/pages/UserPage';
 import DragPage from '@/pages/DragPage';
 import AntdPage from '@/pages/AntdPage';
+import TreePage from '@/pages/TreePage';
 
 const router = createHashRouter([
   {
@@ -35,6 +36,10 @@ const router = createHashRouter([
       {
         path: 'drag',
         element: <DragPage />
+      },
+      {
+        path: 'tree',
+        element: <TreePage />
       },
       {
         path: '*',

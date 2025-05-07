@@ -1,0 +1,24 @@
+.tree-node-container {
+    display: flex;
+    align-items: center;
+    padding: 4px 0;
+    cursor: pointer;
+
+    .node-title {
+        flex: 1;
+    }
+
+    .node-actions {
+        transition: opacity 0.2s;
+        opacity: 0;
+        white-space: nowrap;
+
+        &-hidden {
+            opacity: 0;
+        }
+    }
+
+    &:hover .node-actions {
+        opacity: 1;
+    }
+}
