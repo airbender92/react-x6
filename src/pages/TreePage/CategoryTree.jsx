@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Tree, Modal, Form, Input, Select, Button, Space } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, LeftOutlined, RightOutlined } from '@ant-design/icons';
 import './index.less'
 
 const { TreeNode } = Tree;
@@ -9,6 +9,8 @@ const { Option } = Select;
 const categoryTypes = ['场景类', '组织架构类', '通用类'];
 
 const CategoryTree = ({ onSelectNode, onTreeDataChange }) => { // 新增 onTreeDataChange 回调
+
+    const [isCollapsed, setIsCollapsed] = useState(false);
     const [treeData, setTreeData] = useState([
         {
             title: '初始分类',
@@ -25,6 +27,11 @@ const CategoryTree = ({ onSelectNode, onTreeDataChange }) => { // 新增 onTreeD
     const [newIsTopLevel, setNewIsTopLevel] = useState(true);
     const [expandedKeys, setExpandedKeys] = useState([]);
 
+     // 新增：切换收缩状态
+     const handleToggleCollapse = () => {
+        setIsCollapsed(prev => !prev);
+    };
+
         // 修改 setTreeData 逻辑，触发回调同步数据
         const updateTreeData = (newData) => {
             setTreeData(newData);
@@ -36,25 +43,6 @@ const CategoryTree = ({ onSelectNode, onTreeDataChange }) => { // 新增 onTreeD
         setCurrentNode(node);
         form.resetFields();
         setVisible(true);
-    };
-
-    // 新增：递归更新指定节点的子节点
-    const updateNode = (nodes, targetKey, newChild) => {
-        return nodes.map(node => {
-            if (node.key === targetKey) {
-                return {
-                    ...node,
-                    children: [...node.children, newChild]
-                };
-            }
-            if (node.children && node.children.length > 0) {
-                return {
-                    ...node,
-                    children: updateNode(node.children, targetKey, newChild)
-                };
-            }
-            return node;
-        });
     };
 
     const handleOk = async () => {
@@ -73,12 +61,19 @@ const CategoryTree = ({ onSelectNode, onTreeDataChange }) => { // 新增 onTreeD
             };
 
             if (newIsTopLevel) {
-                updateTreeData([...treeData, newCategory]);
+                updateTreeData([...treeData, newCategory]); // 使用封装的 updateTreeData
             } else {
-                // 使用递归函数更新任意层级节点的子节点
-                const newTreeData = updateNode(treeData, currentNode.key, newCategory);
-                updateTreeData(newTreeData);
-                // 展开父节点（兼容多级展开）
+                const newTreeData = treeData.map(item => {
+                    if (item.key === currentNode.key) {
+                        return {
+                            ...item,
+                            children: [...item.children, newCategory]
+                        };
+                    }
+                    return item;
+                });
+                updateTreeData(newTreeData); // 使用封装的 updateTreeData
+                // 展开父节点
                 if (!expandedKeys.includes(currentNode.key)) {
                     setExpandedKeys([...expandedKeys, currentNode.key]);
                 }
@@ -140,7 +135,19 @@ const CategoryTree = ({ onSelectNode, onTreeDataChange }) => { // 新增 onTreeD
     };
 
     return (
-        <div style={{ width: '30%', borderRight: '1px solid #ccc', padding: '16px' }}>
+        <div style={{
+            width: isCollapsed ? '80px' : '30%', // 收缩时80px，默认30%
+            borderRight: '1px solid #ccc', 
+            padding: '16px',
+            transition: 'width 0.3s ease' // 新增过渡动画
+         }}>
+               {/* 新增：收缩切换按钮 */}
+               <Button 
+                type="text"
+                icon={isCollapsed ? <RightOutlined /> : <LeftOutlined />} // 需要导入 LeftOutlined/RightOutlined
+                onClick={handleToggleCollapse}
+                style={{ marginBottom: '10px' }}
+            />
             <Button type="primary" icon={<PlusOutlined />} onClick={() => addCategory()}>
                 新增一级分类
             </Button>
