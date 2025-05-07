@@ -18,6 +18,23 @@ const EditorCell = forwardRef((props, ref) => {
             }
         }, [content.html]);
 
+            // 新增：点击外部关闭下拉框
+    const handleClickOutside = (e) => {
+        const dropdown = dropdownRef.current;
+        // 点击目标不在下拉框和输入框内时关闭
+        if (dropdown && !dropdown.contains(e.target) ) {
+            setIsDropdownVisible(false);
+        }
+    };
+
+    // 新增：生命周期监听全局点击事件
+    useEffect(() => {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
     const getCaretPosition = () => {
         const selection = window.getSelection();
         if (selection.rangeCount > 0) {
