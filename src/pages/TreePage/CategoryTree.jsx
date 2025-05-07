@@ -38,6 +38,25 @@ const CategoryTree = ({ onSelectNode, onTreeDataChange }) => { // 新增 onTreeD
         setVisible(true);
     };
 
+    // 新增：递归更新指定节点的子节点
+    const updateNode = (nodes, targetKey, newChild) => {
+        return nodes.map(node => {
+            if (node.key === targetKey) {
+                return {
+                    ...node,
+                    children: [...node.children, newChild]
+                };
+            }
+            if (node.children && node.children.length > 0) {
+                return {
+                    ...node,
+                    children: updateNode(node.children, targetKey, newChild)
+                };
+            }
+            return node;
+        });
+    };
+
     const handleOk = async () => {
         try {
             const values = await form.validateFields();
@@ -54,19 +73,12 @@ const CategoryTree = ({ onSelectNode, onTreeDataChange }) => { // 新增 onTreeD
             };
 
             if (newIsTopLevel) {
-                updateTreeData([...treeData, newCategory]); // 使用封装的 updateTreeData
+                updateTreeData([...treeData, newCategory]);
             } else {
-                const newTreeData = treeData.map(item => {
-                    if (item.key === currentNode.key) {
-                        return {
-                            ...item,
-                            children: [...item.children, newCategory]
-                        };
-                    }
-                    return item;
-                });
-                updateTreeData(newTreeData); // 使用封装的 updateTreeData
-                // 展开父节点
+                // 使用递归函数更新任意层级节点的子节点
+                const newTreeData = updateNode(treeData, currentNode.key, newCategory);
+                updateTreeData(newTreeData);
+                // 展开父节点（兼容多级展开）
                 if (!expandedKeys.includes(currentNode.key)) {
                     setExpandedKeys([...expandedKeys, currentNode.key]);
                 }
