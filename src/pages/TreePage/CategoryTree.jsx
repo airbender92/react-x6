@@ -8,7 +8,7 @@ const { Option } = Select;
 
 const categoryTypes = ['场景类', '组织架构类', '通用类'];
 
-const CategoryTree = ({ onSelectNode }) => {
+const CategoryTree = ({ onSelectNode, onTreeDataChange }) => { // 新增 onTreeDataChange 回调
     const [treeData, setTreeData] = useState([
         {
             title: '初始分类',
@@ -24,6 +24,12 @@ const CategoryTree = ({ onSelectNode }) => {
     const [currentNode, setCurrentNode] = useState(null);
     const [newIsTopLevel, setNewIsTopLevel] = useState(true);
     const [expandedKeys, setExpandedKeys] = useState([]);
+
+        // 修改 setTreeData 逻辑，触发回调同步数据
+        const updateTreeData = (newData) => {
+            setTreeData(newData);
+            onTreeDataChange?.(newData); // 触发回调传递最新数据
+        };
 
     const addCategory = (node = null) => {
         setNewIsTopLevel(node === null);
@@ -48,7 +54,7 @@ const CategoryTree = ({ onSelectNode }) => {
             };
 
             if (newIsTopLevel) {
-                setTreeData([...treeData, newCategory]);
+                updateTreeData([...treeData, newCategory]); // 使用封装的 updateTreeData
             } else {
                 const newTreeData = treeData.map(item => {
                     if (item.key === currentNode.key) {
@@ -59,7 +65,7 @@ const CategoryTree = ({ onSelectNode }) => {
                     }
                     return item;
                 });
-                setTreeData(newTreeData);
+                updateTreeData(newTreeData); // 使用封装的 updateTreeData
                 // 展开父节点
                 if (!expandedKeys.includes(currentNode.key)) {
                     setExpandedKeys([...expandedKeys, currentNode.key]);
