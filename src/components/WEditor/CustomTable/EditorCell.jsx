@@ -1,6 +1,7 @@
 import React, { useRef, useState, forwardRef, useImperativeHandle } from 'react';
 
 const EditorCell = forwardRef((props, ref) => {
+    const { mode = 'edit', content = { html: '', text: '' }, onContentChange } = props;
     const editorRef = useRef(null);
     const dropdownRef = useRef(null);
     const [isDropdownVisible, setIsDropdownVisible] = useState(false);
@@ -9,6 +10,13 @@ const EditorCell = forwardRef((props, ref) => {
     const [lastAtNode, setLastAtNode] = useState(null);
 
     const options = ['关键词1', '关键词2', '关键词3'];
+
+        // 初始化内容（包含 span 标签结构）
+        useEffect(() => {
+            if (editorRef.current) {
+                editorRef.current.innerHTML = content.html; // 恢复 HTML 结构
+            }
+        }, [content.html]);
 
     const getCaretPosition = () => {
         const selection = window.getSelection();
@@ -24,6 +32,11 @@ const EditorCell = forwardRef((props, ref) => {
     };
 
     const handleInput = (e) => {
+        const newContent = {
+            html: editorRef.current.innerHTML,
+            text: editorRef.current.textContent
+        };
+        onContentChange?.(newContent); // 触发父组件状态更新
         const editor = editorRef.current;
         const text = editor.textContent;
         const lastIndex = text.lastIndexOf('@');
@@ -77,12 +90,13 @@ const EditorCell = forwardRef((props, ref) => {
             span.style.backgroundColor = 'rgba(0, 103, 222, 0.1)';
             span.style.color = '#0067de';
             span.setAttribute('contenteditable', 'false');
+            span.setAttribute('data-type', 'keyword'); // 标记为关键词类型，用于后续替换 tex
 
             // 计算 @ 在节点内的偏移量
             let currentIndex = 0;
             let offset = 0;
             const calculateOffset = (node) => {
-                if (node.nodeType === Node.TEXT_NODE) {
+                if (node.nodeType === Node.TEXT_NODE) { 
                     if (currentIndex + node.length > lastAtIndex) {
                         offset = lastAtIndex - currentIndex;
                         return true;
@@ -118,7 +132,11 @@ const EditorCell = forwardRef((props, ref) => {
             selection.removeAllRanges();
             selection.addRange(newRange);
         }
-
+        const newContent = {
+            html: editorRef.current.innerHTML,
+            text: editorRef.current.textContent
+        };
+        onContentChange?.(newContent); // 触发父组件状态更新
         setIsDropdownVisible(false);
     };
 
@@ -154,7 +172,7 @@ const EditorCell = forwardRef((props, ref) => {
         <>
             <div
                 ref={editorRef}
-                contentEditable
+                contentEditable={mode === 'edit'}
                 onInput={handleInput}
                 style={{
                     border: 'none',

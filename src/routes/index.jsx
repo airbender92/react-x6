@@ -5,6 +5,7 @@ import NotFound from '@/pages/NotFound';
 import EditorPage from '@/pages/EditorPage';
 import UserPage from '@/pages/UserPage';
 import DragPage from '@/pages/DragPage';
+import AntdPage from '@/pages/AntdPage';
 
 const router = createHashRouter([
   {
@@ -18,6 +19,10 @@ const router = createHashRouter([
       {
         path: 'home',
         element: <HomePage />
+      },
+      {
+        path: 'antd',
+        element: <AntdPage />
       },
       {
         path: 'user',
