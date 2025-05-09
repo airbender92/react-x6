@@ -10,6 +10,10 @@ const categoryTypes = ['场景类', '组织架构类', '通用类'];
 
 const CategoryTree = ({ onSelectNode, onTreeDataChange }) => { // 新增 onTreeDataChange 回调
 
+    // 新增：编辑/删除状态
+    const [isEditing, setIsEditing] = useState(false);    // 是否处于编辑状态
+    const [editingNode, setEditingNode] = useState(null); // 当前编辑的节点
+
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [treeData, setTreeData] = useState([
         {
@@ -45,40 +49,67 @@ const CategoryTree = ({ onSelectNode, onTreeDataChange }) => { // 新增 onTreeD
         setVisible(true);
     };
 
+    // 新增：处理编辑操作
+    const handleEdit = (node) => {
+        setIsEditing(true);          // 标记为编辑状态
+        setCurrentNode(node);        // 复用 currentNode 保存目标节点
+        setEditingNode(node);        // 保存当前编辑的节点
+        form.setFieldsValue({        // 表单预填充当前节点数据
+            type: node.type,
+            name: node.title
+        });
+        setVisible(true);            // 显示模态框
+    };
+
+    // 修改 handleOk：区分新增/编辑逻辑
     const handleOk = async () => {
         try {
             const values = await form.validateFields();
             const newKey = Date.now().toString();
             const newLevel = currentNode ? currentNode.level + 1 : 1;
             const newParent = currentNode ? currentNode.key : null;
-            const newCategory = {
-                title: values.name,
-                key: newKey,
-                level: newLevel,
-                parent: newParent,
-                type: values.type,
-                children: []
-            };
-
-            if (newIsTopLevel) {
-                updateTreeData([...treeData, newCategory]); // 使用封装的 updateTreeData
-            } else {
-                const newTreeData = treeData.map(item => {
-                    if (item.key === currentNode.key) {
-                        return {
-                            ...item,
-                            children: [...item.children, newCategory]
-                        };
-                    }
-                    return item;
+    
+            if (isEditing) {
+                // 编辑逻辑：更新目标节点
+                const updatedTreeData = updateNode(treeData, editingNode.key, {
+                    ...editingNode,
+                    title: values.name,
+                    type: values.type
                 });
-                updateTreeData(newTreeData); // 使用封装的 updateTreeData
-                // 展开父节点
-                if (!expandedKeys.includes(currentNode.key)) {
-                    setExpandedKeys([...expandedKeys, currentNode.key]);
+                updateTreeData(updatedTreeData);
+            } else {
+                // 新增逻辑（原有代码）
+                const newCategory = {
+                    title: values.name,
+                    key: newKey,
+                    level: newLevel,
+                    parent: newParent,
+                    type: values.type,
+                    children: []
+                };
+    
+                if (newIsTopLevel) {
+                    updateTreeData([...treeData, newCategory]); // 使用封装的 updateTreeData
+                } else {
+                    const newTreeData = treeData.map(item => {
+                        if (item.key === currentNode.key) {
+                            return {
+                                ...item,
+                                children: [...item.children, newCategory]
+                            };
+                        }
+                        return item;
+                    });
+                    updateTreeData(newTreeData); // 使用封装的 updateTreeData
+                    // 展开父节点
+                    if (!expandedKeys.includes(currentNode.key)) {
+                        setExpandedKeys([...expandedKeys, currentNode.key]);
+                    }
                 }
+                setVisible(false);
             }
             setVisible(false);
+            setIsEditing(false);      // 重置编辑状态
         } catch (errorInfo) {
             console.log('Validate Failed:', errorInfo);
         }
@@ -213,3 +244,19 @@ const CategoryTree = ({ onSelectNode, onTreeDataChange }) => { // 新增 onTreeD
 };
 
 export default CategoryTree;
+
+
+// 新增：递归更新节点（用于编辑）
+const updateNode = (nodes, targetKey, updatedNode) => {
+    return nodes.map(node => {
+        if (node.key === targetKey) {
+            return updatedNode;   // 替换为更新后的节点
+        }
+        if (node.children) {
+            return {
+                ...node,
+                children: updateNode(node.children, targetKey, updatedNode)
+            };
+        }
+        return node;
+    });
