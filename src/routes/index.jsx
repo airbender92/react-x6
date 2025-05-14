@@ -7,6 +7,7 @@ import UserPage from '@/pages/UserPage';
 import DragPage from '@/pages/DragPage';
 import AntdPage from '@/pages/AntdPage';
 import TreePage from '@/pages/TreePage';
+import WordPage from '@/pages/WordPage';
 
 const router = createHashRouter([
   {
@@ -40,6 +41,10 @@ const router = createHashRouter([
       {
         path: 'tree',
         element: <TreePage />
+      },
+      {
+        path: 'word',
+        element: <WordPage />,
       },
       {
         path: '*',

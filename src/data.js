@@ -1,3 +1,4 @@
+import { Children } from "react";
 import portConfig from "./utils/portConfig";
 const data = {
     nodes: [
@@ -108,3 +109,35 @@ const data = {
   };
 
   export default data;
+
+  const tree = [
+    {
+      key: '-1',
+      type: 'home',
+      title: 'a',
+      parent: null,
+      children: [
+        {
+          key: '1-1',
+          type: 'home',
+          title: 'a-1',
+          parent: '-1',
+          children: [],
+          contents: [
+            {
+              data: [],
+              key: 'c-2',
+              parent: '1-1'
+            }
+          ]
+        }
+      ],
+      contents: [
+        {
+          data: [],
+          key: 'c-1',
+          parent: '-1'
+        }
+      ]
+    }
+  ]
