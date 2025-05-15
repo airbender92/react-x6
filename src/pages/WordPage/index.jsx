@@ -31,7 +31,7 @@ const ExportComponent = () => {
         fetchTemplate();
     }, []);
 
-    const convertImagesToBase64 = async (element) => {
+    const convertImagesToBase64 = async (element, maxWidth = 500, maxHeight = 500) => {
         const images = element.querySelectorAll('img');
         for (let img of images) {
             try {
@@ -39,7 +39,30 @@ const ExportComponent = () => {
                 const blob = await response.blob();
                 const reader = new FileReader();
                 reader.onloadend = () => {
-                    img.src = reader.result;
+                    const imgObj = new Image();
+                    imgObj.src = reader.result;
+                    imgObj.onload = () => {
+                        let width = imgObj.width;
+                        let height = imgObj.height;
+
+                        if (width > maxWidth) {
+                            height = height * (maxWidth / width);
+                            width = maxWidth;
+                        }
+
+                        if (height > maxHeight) {
+                            width = width * (maxHeight / height);
+                            height = maxHeight;
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(imgObj, 0, 0, width, height);
+                        const dataURL = canvas.toDataURL();
+                        img.src = dataURL;
+                    };
                 };
                 reader.readAsDataURL(blob);
             } catch (error) {
@@ -138,6 +161,11 @@ const ExportComponent = () => {
             <div ref={contentRef}>
                 <h1 style={{ fontSize: '24px', fontFamily: 'Arial' }}>这是居中标题</h1>
                 <p style={{ fontSize: '16px', fontFamily: 'Arial' }}>这是缩进段落，这里可以包含更多的文本和元素。</p>
+                <input type="radio" name="option" value="option1" /> 选项 1
+  <input type="radio" name="option" value="option2" /> 选项 2
+
+  <input type="checkbox" name="check" value="check1" /> 复选框 1
+  <input type="checkbox" name="check" value="check2" /> 复选框 2
                 <table border="1" style={{ fontSize: '14px', fontFamily: 'Arial', width: '500px', height: '200px' }}>
                     <thead>
                         <tr>
@@ -164,6 +192,8 @@ const ExportComponent = () => {
                     <li>有序列表项1</li>
                     <li>有序列表项2</li>
                 </ol>
+                <img src={image} alt="示例图片" />
+                <img src={image} alt="示例图片" />
                 <img src={image} alt="示例图片" />
             </div>
             <button onClick={handleExport}>导出为 DOCX</button>
