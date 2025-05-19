@@ -6,7 +6,7 @@ import { changeMode } from "@/redux/actions/weditor";
 
 import CustomEditorText from './CustomEditorText'
 import UploadLogo from './UploadLogo' 
-import CustomTable from './CustomTable';
+import CustomTable from './CustomTable/index';
 
 function WEditor() {
   const dispatch = useDispatch();

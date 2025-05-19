@@ -1,95 +1,201 @@
-import React, { useState, createRef, useEffect } from 'react';
-import ReactDOM from 'react-dom/client'; 
-import TableSelection from './TableSelection';
-import EditorCell from './EditorCell';
+import React, {useState, Component } from 'react';
+import { Table, InputNumber, Button, Space } from 'antd';
+import 'antd/dist/antd.css';
+import Resizable from 'react-resizable';
+import 'react-resizable/css/styles.css';
+import './index.less'; // 自定义样式
 
-const ParentComponent = () => {
-    const [mode, setMode] = useState('edit'); // ['edit', 'view']
-    const [tableData, setTableData] = useState([]); // 保存所有单元格内容：[row][col] = { html: '...', text: '...' }
-    const customTableRef = createRef();
-    const MIN_WIDTH = '80px';
-    const MIN_HEIGHT = '30px';
+// 模拟 EditorCell 组件
+const EditorCell = ({ mode, content, onContentChange }) => {
+  return (
+    <div className="editor-cell" style={{ padding: '8px' }}>
+      {mode === 'edit' ? (
+        <input
+          type="text"
+          value={content?.text || ''}
+          onChange={(e) => onContentChange({ ...content, text: e.target.value })}
+          style={{ width: '100%' }}
+        />
+      ) : (
+        <div>{content?.text || ''}</div>
+      )}
+    </div>
+  );
+};
 
-    const onCreateTable = (rows, cols) => {
+const TableSelection = ({ onCreateTable }) => {
+  const [rows, setRows] = useState(5);
+  const [cols, setCols] = useState(3);
 
-         // 初始化或恢复内容（保留已有数据）
-         const initialData = Array.from({ length: rows }, (_, i) => 
-            Array.from({ length: cols }, (_, j) => 
-                tableData[i]?.[j] || { html: '', text: '' } // 从状态恢复内容
-            )
-        );
-        setTableData(initialData);
+  return (
+    <div className="mb-4">
+      <Space>
+        <span>行数:</span>
+        <InputNumber
+          value={rows}
+          onChange={setRows}
+          min={1}
+          style={{ width: 80 }}
+        />
+        <span>列数:</span>
+        <InputNumber
+          value={cols}
+          onChange={setCols}
+          min={1}
+          style={{ width: 80 }}
+        />
+        <Button
+          type="primary"
+          onClick={() => onCreateTable(rows, cols)}
+        >
+          创建表格
+        </Button>
+      </Space>
+    </div>
+  );
+};
 
-        const table = document.createElement('table');
-        table.style.borderCollapse = 'collapse'; // 合并边框
-        table.style.border = '1px solid #ccc'; // 表格整体边框
+// 可调整宽度的表头单元格
+const ResizeableTitle = props => {
+  const { onResize, width, ...restProps } = props;
 
-        const tbody = document.createElement('tbody');
+  if (!width) {
+    return <th {...restProps} />;
+  }
 
-        for (let i = 0; i < rows; i++) {
-            const row = document.createElement('tr');
-            for (let j = 0; j < cols; j++) {
-                const cell = document.createElement('td');
-                cell.style.minWidth = MIN_WIDTH;
-                cell.style.minHeight = MIN_HEIGHT;
-                cell.style.border = '1px solid #ccc'; // 单元格边框
-                  // 传递内容和内容更新回调
-                const editorCell = React.createElement(EditorCell, {
-                    mode,
-                    content: initialData[i][j], // 传递当前单元格内容
-                    onContentChange: (newContent) => {
-                        setTableData(prev => {
-                            const updated = [...prev];
-                            updated[i] = [...updated[i]];
-                            updated[i][j] = newContent; // 更新状态中的内容
-                            return updated;
-                        });
-                    }
-                });
-                const root = ReactDOM.createRoot(cell);
-                root.render(editorCell);
-                row.appendChild(cell);
-            }
-            tbody.appendChild(row);
-        }
-        table.appendChild(tbody);
-        if (customTableRef.current) {
-            customTableRef.current.innerHTML = '';
-            customTableRef.current.appendChild(table);
-            // 监听单元格内容变化
-            const rowsElements = table.querySelectorAll('tr');
-            rowsElements.forEach((row) => {
-                const cells = row.querySelectorAll('td');
-                cells.forEach((cell) => {
-                    const observer = new MutationObserver(() => {
-                        adjustRowHeight(row);
-                    });
-                    observer.observe(cell, { childList: true, subtree: true });
-                });
-            });
-        }
+  return (
+    <Resizable
+      width={width}
+      height={0}
+      handle={<div className="resize-handle" />}
+      onResize={onResize}
+      draggableOpts={{ enableUserSelectHack: false }}
+    >
+      <th {...restProps} />
+    </Resizable>
+  );
+};
+
+class ParentComponent extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      mode: 'edit',
+      tableData: [],
+      columns: [],
+      headerHeight: 24, // 表头初始高度（像素）
     };
+    this.tableContainerRef = React.createRef();
+    this.MIN_WIDTH = 80; // 最小列宽（像素）
+    this.MIN_HEIGHT = 30; // 最小行高（像素）
+  }
 
-    const adjustRowHeight = (row) => {
-        const cells = row.querySelectorAll('td');
-        let maxHeight = 0;
-        cells.forEach((cell) => {
-            const cellHeight = cell.getBoundingClientRect().height;
-            if (cellHeight > maxHeight) {
-                maxHeight = cellHeight;
-            }
-        });
-        cells.forEach((cell) => {
-            cell.style.height = `${maxHeight}px`;
-        });
+  onCreateTable = (rows, cols) => {
+    // 初始化列
+    const columns = Array.from({ length: cols }, (_, i) => ({
+      title: `列 ${i + 1}`,
+      dataIndex: `col${i}`,
+      key: `col${i}`,
+      width: 150, // 初始列宽
+    }));
+
+    // 初始化数据（保留历史数据）
+    const initialData = Array.from({ length: rows }, (_, i) => 
+      Array.from({ length: cols }, (_, j) => 
+        this.state.tableData[i]?.[j] || { html: '', text: `单元格(${i+1},${j+1})` }
+      )
+    );
+
+    this.setState({
+      columns,
+      tableData: initialData,
+    });
+  };
+
+  handleColumnResize = index => (e, { size }) => {
+    this.setState(({ columns }) => {
+      const nextColumns = [...columns];
+      nextColumns[index] = {
+        ...nextColumns[index],
+        width: Math.max(this.MIN_WIDTH, size.width), // 最小宽度限制
+      };
+      return { columns: nextColumns };
+    });
+  };
+
+  handleHeaderResize = (e, { size }) => {
+    this.setState({
+      headerHeight: Math.max(16, size.height), // 最小高度限制
+    });
+  };
+
+  render() {
+    const { columns, tableData, headerHeight } = this.state;
+
+    const renderTable = () => {
+      if (!tableData.length) return null;
+
+      const resizableColumns = columns.map((col, index) => ({
+        ...col,
+        onHeaderCell: column => ({
+          width: column.width,
+          onResize: this.handleColumnResize(index),
+        }),
+        render: (content, record, rowIndex) => (
+          <EditorCell
+            mode={this.state.mode}
+            content={content}
+            onContentChange={(newContent) => {
+              this.setState(prevState => {
+                const updated = [...prevState.tableData];
+                updated[rowIndex] = [...updated[rowIndex]];
+                updated[rowIndex][col.dataIndex.replace('col', '')] = newContent;
+                return { tableData: updated };
+              });
+            }}
+          />
+        ),
+      }));
+
+      return (
+        <div ref={this.tableContainerRef} style={{ width: '100%', overflow: 'auto' }}>
+          <Resizable
+            width="100%"
+            height={headerHeight}
+            axis="y"
+            handle={<div className="header-resize-handle" />}
+            onResize={this.handleHeaderResize}
+          >
+            <div style={{ height: '100%', opacity: 0 }} />
+          </Resizable>
+          <Table
+            dataSource={tableData.map((row, index) => ({ key: index, ...row }))}
+            columns={resizableColumns}
+            pagination={false}
+            bordered
+            style={{ width: '100%', borderCollapse: 'collapse' }}
+            components={{
+              header: {
+                cell: ResizeableTitle,
+              },
+            }}
+            // 行高自适应
+            onRow={(record, rowIndex) => ({
+              style: { minHeight: this.MIN_HEIGHT },
+              className: 'custom-row',
+            })}
+          />
+        </div>
+      );
     };
 
     return (
-        <div>
-            <TableSelection onCreateTable={onCreateTable} />
-            <div ref={customTableRef}></div>
-        </div>
+      <div>
+        <TableSelection onCreateTable={this.onCreateTable} />
+        {renderTable()}
+      </div>
     );
-};
+  }
+}
 
-export default ParentComponent;    
+export default ParentComponent;  
