@@ -135,6 +135,15 @@ class ParentComponent extends Component {
     const renderTable = () => {
       if (!tableData.length) return null;
 
+       // 关键修改：将二维数组转换为对象数组（匹配 dataIndex）
+       const dataSource = tableData.map((row, rowIndex) => {
+        const rowObj = {};
+        row.forEach((cell, colIndex) => {
+          rowObj[`col${colIndex}`] = cell; // 属性名与 columns.dataIndex 完全匹配（col0、col1...）
+        });
+        return { key: rowIndex, ...rowObj };
+      });
+
       const resizableColumns = columns.map((col, index) => ({
         ...col,
         onHeaderCell: column => ({
@@ -169,7 +178,7 @@ class ParentComponent extends Component {
             <div style={{ height: '100%', opacity: 0 }} />
           </Resizable>
           <Table
-            dataSource={tableData.map((row, index) => ({ key: index, ...row }))}
+            dataSource={dataSource}
             columns={resizableColumns}
             pagination={false}
             bordered

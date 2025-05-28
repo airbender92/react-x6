@@ -7,7 +7,9 @@ import UserPage from '@/pages/UserPage';
 import DragPage from '@/pages/DragPage';
 import AntdPage from '@/pages/AntdPage';
 import TreePage from '@/pages/TreePage';
-import WordPage from '@/pages/WordPage';
+import WordPage from '@/pages/WordPage/index';
+import Tinymce from '@/pages/Tinymce';
+import StepTable from '@/pages/StepTable';
 
 const router = createHashRouter([
   {
@@ -45,6 +47,14 @@ const router = createHashRouter([
       {
         path: 'word',
         element: <WordPage />,
+      },
+      {
+        path: 'tinymce',
+        element: <Tinymce />,
+      },
+      {
+        path: 'steptable',
+        element: <StepTable />,
       },
       {
         path: '*',
