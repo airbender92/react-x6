@@ -1,0 +1,48 @@
+.documentEditorOuter{
+    display: block;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    :global(.ant-spin-nested-loading){
+        height: 100%;
+    }
+
+    :global(.ant-spin-container){
+        height: 100%;
+    }
+    .left{
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+}
+
+.documentEditorWrapper {
+    display: flex;
+    align-items: flex-start;
+    height: calc(100% - 64px);
+    overflow: hidden;
+    position: relative;
+    &.plan{
+        height: calc(100% - 90px);
+    }
+}
+
+:global(.flash) {
+    animation: flash 2s ease-in-out;
+}
+
+@keyframes flash {
+    0% {
+        background-color: transparent;
+    }
+    25%, 75% {
+        background-color: #ff0;
+    }
+    50% {
+        background-color: #ff0;
+    }
+    100% {
+        background-color: transparent;
+    }
+}

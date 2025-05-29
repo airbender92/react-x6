@@ -1,42 +1,39 @@
-import React, { useState } from'react';
-import './index.css';
+import React from 'react';
 
-const Step = ({ label, active, onClick }) => {
-  return (
-    <div className={`step ${active? 'active' : ''}`} onClick={onClick}>
-      {label}
-    </div>
-  );
-};
 
-const Steps = () => {
-  const [activeStep, setActiveStep] = useState(0);
-  const steps = ['Default', 'Primary', 'Success', 'Link', 'Info', 'Warning', 'Danger'];
+const SvgBackgroundComponent = ({
+  bgColor,
+  width = '200px',
+  height = '100px',
+  children
+}) => {
+  // 编码 SVG 为 Data URL，支持动态颜色
+  const svgDataUrl = encodeURIComponent(`
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200" width="100%" height="100%">
+      <!-- 使用三角形占满整个 viewBox -->
+      <path d="M0 0 L400 0 L400 200 L0 200 Z" 
+            stroke="black" stroke-width="1" fill="#3e75ff" />
+      
+      <!-- 可选：添加装饰元素，展示如何在占满的基础上添加细节 -->
+      <path d="M0 0 L400 200 M400 0 L0 200" 
+            stroke="white" stroke-width="2" stroke-dasharray="10,5" />
+    </svg>
+  `);
 
-  const handleStepClick = (index) => {
-    setActiveStep(index);
+  const backgroundStyle = {
+    backgroundImage: `url("data:image/svg+xml,${svgDataUrl}")`,
+    backgroundSize: 'cover',
+    backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center',
+    width,
+    height
   };
 
   return (
-    <div className="steps">
-      {steps.map((step, index) => (
-        <Step
-          key={index}
-          label={step}
-          active={index === activeStep}
-          onClick={() => handleStepClick(index)}
-        />
-      ))}
+    <div style={backgroundStyle}>
+      hello
     </div>
   );
 };
 
-function App() {
-  return (
-    <div className="App">
-      <Steps />
-    </div>
-  );
-}
-
-export default App;
+export default SvgBackgroundComponent;    

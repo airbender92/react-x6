@@ -1,173 +1,166 @@
+/* 基础箭头按钮样式 */
 .btn-arrow-right,
 .btn-arrow-left {
   position: relative;
   padding-left: 18px;
   padding-right: 18px;
-  border-radius: 0 !important;
+  border-radius: 0 !important; /* 强制取消圆角 */
   margin-right: 1px;
-  
+  overflow: hidden; /* 隐藏超出部分 */
+
   &[disabled] {
-    opacity: 1.00;
+    opacity: 1; /* 修复禁用状态透明度问题（原值1.00冗余） */
+    cursor: not-allowed; /* 补充禁用光标样式 */
   }
 
-  &:before, &:after{
-    content:"";
+  /* 箭头基础样式 */
+  &:before,
+  &:after {
+    content: "";
     position: absolute;
-    top: 4px; /* move it down because of rounded corners */
-    height: 24px; /* button_inner_height / sqrt(2) */
-    width: 24px; /* same as height */
-    background: inherit; /* use parent background */
-    border: inherit; /* use parent border */
-    border-left-color: transparent; /* hide left border */
-    border-bottom-color: transparent; /* hide bottom border */
-    border-radius: 0 !important;
+    top: 50%; /* 垂直居中基准 */
+    transform: translateY(-50%); /* 垂直居中调整 */
+    width: 24px; /* 统一使用正方形尺寸 */
+    height: 24px; /* 便于旋转后形成等腰直角三角形 */
+    background: inherit; /* 继承按钮背景色 */
+    border: inherit; /* 继承按钮边框样式 */
+    border-radius: 0 !important; /* 强制取消伪元素圆角 */
+    
+    /* 隐藏非箭头方向边框（形成三角形） */
+    border-left-color: transparent;
+    border-bottom-color: transparent;
   }
 
-  &:before{
-    left: -13px;
+  &:before {
+    left: -13px; /* 左侧箭头起始位置 */
   }
 
-  &:after{
-    right: -13px;
+  &:after {
+    right: -13px; /* 右侧箭头起始位置 */
   }
 
-  &.btn-arrow-left{
-    padding-right: 36px;
-
-    &:before, &:after{
-      transform: rotate(225deg); /* rotate right arrow squares 45 deg to point right */
+  /* 左箭头按钮样式 */
+  &.btn-arrow-left {
+    padding-right: 36px; /* 右侧留出箭头空间 */
+    
+    &:before,
+    &:after {
+      transform: rotate(225deg); /* 向左箭头：旋转225°（指向左） */
     }
   }
 
-  &.btn-arrow-right{
-    padding-left: 36px;
-
-    &:before, &:after{
-      transform: rotate(45deg); /* rotate right arrow squares 45 deg to point right */
+  /* 右箭头按钮样式 */
+  &.btn-arrow-right {
+    padding-left: 36px; /* 左侧留出箭头空间 */
+    
+    &:before,
+    &:after {
+      transform: rotate(45deg); /* 向右箭头：旋转45°（指向右） */
     }
   }
 }
 
+/* 箭头层级调整（确保箭头尖端在前方） */
 .btn-arrow-right:after,
-.btn-arrow-left:before { /* bring arrow pointers to front */
-  z-index: 3;
+.btn-arrow-left:before {
+  z-index: 3; /* 箭头尖端层级 */
 }
 
+/* 隐藏箭头尾部背景（形成完整箭头形状） */
 .btn-arrow-right:before,
-.btn-arrow-left:after { /* hide arrow tails background */
-  background-color: white;
+.btn-arrow-left:after {
+  background-color: white; /* 背景色与按钮背景一致时需调整 */
 }
 
 
-/* Large */
+/* -------------------- 响应式尺寸适配 -------------------- */
+/* 大尺寸按钮 */
 .btn-lg.btn-arrow-right,
 .btn-lg.btn-arrow-left,
 .btn-group-lg > .btn-arrow-left,
-.btn-group-lg > .btn-arrow-right{
+.btn-group-lg > .btn-arrow-right {
   padding-left: 22px;
   padding-right: 22px;
-  margin-right: 0px;
+  margin-right: 0; /* 优化外边距格式 */
 
-  &:before, &:after{
-    top: 6px; /* move it down because of rounded corners */
-    height: 32px; /* button_inner_height / sqrt(2) */
-    width: 32px; /* same as height */
+  &:before,
+  &:after {
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
   }
 
-  &:before{
-    left: -16px;
-  }
+  &:before { left: -16px; }
+  &:after { right: -16px; }
 
-  &:after{
-    right: -16px;
-  }
-
-  &.btn-arrow-left{
-    padding-right: 44px;
-  }
-
-  &.btn-arrow-right{
-    padding-left: 44px;
-  }
+  &.btn-arrow-left { padding-right: 44px; }
+  &.btn-arrow-right { padding-left: 44px; }
 }
 
-/* Small */
+/* 小尺寸按钮 */
 .btn-sm.btn-arrow-right,
 .btn-sm.btn-arrow-left,
 .btn-group-sm > .btn-arrow-left,
-.btn-group-sm > .btn-arrow-right{
-  padding-left: 14px;
-  padding-right: 14px;
-  margin-right:-1px;
+.btn-group-sm > .btn-arrow-right {
+  padding: 0 14px; /* 简化内边距写法 */
+  margin-right: -1px;
 
-  &:before, &:after{
-    top: 4px; /* move it down because of rounded corners */
-    height: 20px; /* button_inner_height / sqrt(2) */
-    width: 20px; /* same as height */
+  &:before,
+  &:after {
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
   }
 
-  &:before{
-    left: -10px;
-  }
+  &:before { left: -10px; }
+  &:after { right: -10px; }
 
-  &:after{
-    right: -10px;
-  }
-
-  &.btn-arrow-left{
-    padding-right: 28px;
-  }
-
-  &.btn-arrow-right{
-    padding-left: 28px;
-  }
+  &.btn-arrow-left { padding-right: 28px; }
+  &.btn-arrow-right { padding-left: 28px; }
 }
 
-/* Extra Small */
+/* 超小尺寸按钮 */
 .btn-xs.btn-arrow-right,
 .btn-xs.btn-arrow-left,
 .btn-group-xs > .btn-arrow-left,
-.btn-group-xs > .btn-arrow-right{
-  padding-left: 10px;
-  padding-right: 10px;
+.btn-group-xs > .btn-arrow-right {
+  padding: 0 10px; /* 统一内边距写法 */
   margin-right: -1px;
 
-  &:before, &:after{
-    top: 3px; /* move it down because of rounded corners */
-    height: 14px; /* button_inner_height / sqrt(2) */
-    width: 14px; /* same as height */
+  &:before,
+  &:after {
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
   }
 
-  &:before{
-    left: -7px;
-  }
+  &:before { left: -7px; }
+  &:after { right: -7px; }
 
-  &:after{
-    right: -7px;
-  }
-
-  &.btn-arrow-left{
-    padding-right: 20px;
-  }
-
-  &.btn-arrow-right{
-    padding-left: 20px;
-  }
+  &.btn-arrow-left { padding-right: 20px; }
+  &.btn-arrow-right { padding-left: 20px; }
 }
 
-/* Button Groups */
+
+/* -------------------- 按钮组适配 -------------------- */
 .btn-group > .btn-arrow-left, 
-.btn-group > .btn-arrow-right{
-  &:hover, &:focus{
-    z-index: initial;
+.btn-group > .btn-arrow-right {
+  &:hover,
+  &:focus {
+    z-index: auto; /* 恢复正常层级 */
   }
 }
 
-.btn-group > .btn-arrow-right+.btn-arrow-right,
-.btn-group > .btn-arrow-left+.btn-arrow-left{
-  margin-left: 0px;
+/* 连续箭头按钮间距处理 */
+.btn-group > .btn-arrow-right + .btn-arrow-right,
+.btn-group > .btn-arrow-left + .btn-arrow-left {
+  margin-left: 0; /* 取消同类按钮间的左边距 */
 }
 
-.btn-group > .btn:not(.btn-arrow-right):not(.btn-arrow-left){
-  z-index: 1;
+/* 非箭头按钮层级调整 */
+.btn-group > .btn:not(.btn-arrow-right):not(.btn-arrow-left) {
+  z-index: 1; /* 确保非箭头按钮在底层 */
 }
