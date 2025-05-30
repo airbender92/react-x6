@@ -1,7 +1,14 @@
 import {message} from 'antd'
 import documentEditorService from '../services/documentEditorService'
 import {
-
+addTreeNode,
+resetSelectedNode,
+addTreeNode,
+updateTree,
+deleteTreeNode,
+addYaosu,
+deleteYaosu,
+updateYaosu
 } from '../utils'
 
 export const createDocumentEditor = (prefix) => {
@@ -217,5 +224,159 @@ export const createDocumentEditor = (prefix) => {
         treeData: [],
         activeTreeNode: null,
         modal: null,
+    };
+
+    const reducer = (state = initialState, action) => {
+        switch(action.type) {
+            case SET_LOADING: {
+                return {
+                    ...state,
+                    loading: action.payload,
+                };
+            } 
+            case SET_PLAN_ID: {
+                return {
+                    ...state,
+                    planId: action.payload,
+                }; 
+            }
+            case SET_TEMPLATE: {
+                return {
+                   ...state,
+                    isTemplate: action.payload,
+                };
+            }
+            case SET_MODE: {
+                return {
+                    ...state,
+                    mode: action.payload,
+                };
+            }
+            case SET_CURRENT_STEP: {
+                return {
+                    ...state,
+                    currentStep: action.payload,
+                };
+            }
+            case SET_KEY_WORDS: {
+                return {
+                   ...state,
+                    keyWords: action.payload,
+                };
+            }
+            case SET_EDITING_CONTENT: {
+                return {
+                   ...state,
+                    editingContent: action.payload,
+                };
+            }
+            case SET_TREEDATA: {
+                return {
+                   ...state,
+                    treeData: action.payload,
+                };
+            }
+            case SET_ACTIVE_TREE_NODE: {
+                return {
+                  ...state,
+                    activeTreeNode: action.payload,
+                };
+            }
+            case SET_CONTENT_LIST: {
+                return {
+                  ...state,
+                    contentList: action.payload,
+                };
+            }
+            case ADD_CONTENT_WRAPPER: {
+                const {id, type, level, title, parent } = action.payload;
+                const params = {
+                    id,
+                    type,
+                    level,
+                    title,
+                    parent,
+                    children: [],
+                    contents: [],
+                }
+                const newContentList = addTreeNode(state.contentList, 'id', params);
+                return {
+                  ...state,
+                    contentList: newContentList,
+                };
+            }
+            case EDIT_CONTENT_WRAPPER_TITLE: {
+                const {id, title} = action.payload;
+                const newContentList = updateTree(state.contentList, 'id', id, 'title', title);
+                return {
+                 ...state,
+                    contentList: newContentList,
+                };
+            }
+            case DELETE_CONTENT_WRAPPER: {
+                const {id} = action.payload;
+                const newContentList = deleteTreeNode(state.contentList, 'id', id);
+                return {
+                ...state,
+                    contentList: newContentList,
+                };
+            }
+            case SET_CONTENT_LIST: {
+                return {
+                 ...state,
+                    contentList: action.payload,
+                }; 
+            }
+            case ADD_CONTENT_FACTOR_ITEM: {
+               const params = action.payload;
+               const newContentList = addYaosu(state.contentList, params.menuId, params);
+               return {
+                ...state,
+                    contentList: newContentList,
+                }; 
+            }
+            case UPDATE_CONTENT_FACTOR_ITEM: {
+                const params = action.payload;
+                const newContentList = updateYaosu(state.contentList, params.menuId, params);
+                return {
+                ...state,
+                    contentList: newContentList,
+                };
+            }
+            case SORTED_CONTENTS: {
+                const params = action.payload;
+                const newContentList = updateTree(state.contentList, 'id', params.id, 'contents', params.contents);
+                return {
+               ...state,
+                    contentList: newContentList,
+                };
+            }
+            case DELETE_YAOSU: {
+                const params = action.payload;
+                const newContentList = updateYaosu(state.contentList, params.menuId, params);
+                return {
+                 ...state,
+                    contentList: newContentList,   
+                }
+            }
+            case SET_LOCK: {
+                return {
+                ...state,
+                    lock: action.payload,
+                };
+            }
+            default: {
+                return state;
+            }
+        } 
+    }
+
+    return {
+        actions: {
+            ...actions,
+            ...asyncActions,
+        },
+        reducer
+
     }
 }
