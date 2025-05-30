@@ -24,6 +24,20 @@ const DocumentEditor = (props) => {
         contentList,
      } = editorState;
 
+     const onSelectNode = (node) => {
+       if(documentContentRef.current){
+        documentContentRef.current.handleTreeSelect(node);
+       }
+     }
+
+     useEffect(() => {
+        if(planId) {
+            dispatch(editorActions.getKeyWords());
+            dispatch(editorActions.getTreeDataAsync({relId: planId, isTemplate: isTemplate}));
+            dispatch(editorActions.getContentList({relId: planId, isTemplate: isTemplate}));
+        }
+     }, [dispatch, planId, isTemplate])
+
      return (
         <div className={styles.documentEditorOuter}>
             <Spin spinning={loading} size='large'>
@@ -39,8 +53,19 @@ const DocumentEditor = (props) => {
                             onSelectNode={onSelectNode}
                         />
                     </div>
+                    <DocumentContent 
+                        ref={documentContentRef}
+                        dispatch={dispatch}
+                        editorActions={editorActions}
+                        editorState={editorState}
+                        treeData={treeData}
+                        activeTreeNode={activeTreeNode}
+                        contentList={contentList}
+                    />
                 </div>
             </Spin>
         </div> 
      )
 }
+
+export default DocumentEditor;
