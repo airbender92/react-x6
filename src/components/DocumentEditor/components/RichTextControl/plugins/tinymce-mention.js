@@ -9,6 +9,7 @@ tinymce.PluginManager.add('mention', function(editor, url) {
     let dropdown = null;
     let selectedIndex = -1;
     let closeDropdownTimer = null;
+    let optionsWrapper = null;
 
     const createDropdown = () => {
         if(dropdown){
@@ -24,21 +25,57 @@ tinymce.PluginManager.add('mention', function(editor, url) {
         dropdown.style.minWidth = '100px';
         document.body.appendChild(dropdown);
         dropdown.addEventListener('mousedown', (e) => {
-            e.preventDefault();
+            if(!e.target.closest('input')) {
+                e.preventDefault();
+            }
         });
 
-        // 添加选项
-        updateDropdown(options);
-        document.addEventListener('click', closeDropdownOnOutsideClick);
+        // 添加输入框（关键新增代码）
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = styles.tinymceMentionInput; // 需确保 index.less 有此样式
+        input.placeholder = '输入提及对象...';
+        input.style.width = '100%';
+        input.style.padding = '6px 10px';
+        input.style.border = 'none';
+        input.style.borderBottom = '1px solid #eee';
+        dropdown.appendChild(input); // 插入输入框到下拉框
+
+        optionsWrapper = document.createElement('div'); // 用于包裹选项的容器
+        dropdown.appendChild(optionsWrapper); // 插入容器到下拉框
+
+        // 保存原始选项用于过滤（关键新增代码）
+        const originalOptions = [...options];
+
+          // 绑定输入事件（关键新增代码）
+          input.addEventListener('input', (e) => {
+            const keyword = e.target.value.trim().toLowerCase();
+            const filteredOptions = originalOptions.filter(option => 
+                option.title.toLowerCase().includes(keyword)
+            );
+            updateDropdown(filteredOptions); // 触发选项更新
+        });
+
+         // 初始加载所有选项（修改：使用原始选项）
+         updateDropdown(originalOptions);
+         document.addEventListener('click', closeDropdownOnOutsideClick);
     };
 
     // 更新下拉框内容
-    const updateDropdown = (options) => {
-        dropdown.innerHTML = '';
-        options.forEach((option, index) => {
-            const item = document.createElement('div');
-            item.className = styles.tinymceMentionOption;
-            item.textContent = option.title;
+    const updateDropdown = (items) => {
+        optionsWrapper.innerHTML = ''; // 清空容器
+        if(items.length === 0){
+            const option = document.createElement('div');
+            option.className = styles.tinymceMentionOption;
+            option.textContent = '没有找到相关选项';
+            option.style.padding = "6px 10px";
+            optionsWrapper.appendChild(option);
+            return;
+        }
+        items.forEach((item, index) => {
+            const option = document.createElement('div');
+            option.className = styles.tinymceMentionOption;
+            option.textContent = item.title;
             option.style.padding = "6px 10px";
             option.style.cursor = "pointer"; 
 
@@ -50,9 +87,9 @@ tinymce.PluginManager.add('mention', function(editor, url) {
                 if(closeDropdownTimer){
                     clearTimeout(closeDropdownTimer);
                 }
-                insertMention(option);
+                insertMention(item);
             });
-            dropdown.appendChild(item);
+            optionsWrapper.appendChild(option);
         })
     };
 
