@@ -97,6 +97,7 @@ const updateSelectedNodeByScroll = (currentSelectedKey) => {
             const rect = element.getBoundingClientRect();
             const elementTop = rect.top;
             const elementHeight = rect.height;
+            const elementBottom = rect.bottom;
             const elementMiddle = elementTop + elementHeight / 2;
             const distanceToParentTop = Math.abs(elementMiddle - parentTop);
            // 找到第一个顶部在父容器内的元素
@@ -104,10 +105,14 @@ const updateSelectedNodeByScroll = (currentSelectedKey) => {
                 closetKey = key;
                 firstInViewTop = elementTop;
             }
-            if(elementTop <= parentBottom && elementTop + elementHeight >= parentTop && distanceToParentTop < smallestDistance) {
-                closetKey = key;
-                smallestDistance = distanceToParentTop;
-            }
+         // 判断元素是否与视口有重叠部分
+         const isOverlapping = elementBottom >= parentTop && elementTop <= parentBottom;
+            
+         // 找到距离容器顶部最近且与视口重叠的元素
+         if (isOverlapping && distanceToParentTop < smallestDistance) {
+             closetKey = key;
+             smallestDistance = distanceToParentTop;
+         }
         });
      // 如果没有元素完全在父容器内，选择第一个顶部在父容器内的元素
      let keyToSelect = closetKey || firstInViewKey;
@@ -129,10 +134,14 @@ const updateSelectedNodeByScroll = (currentSelectedKey) => {
                      const rect = childElement.getBoundingClientRect();
                      const elementTop = rect.top;
                      const elementHeight = rect.height;
+                     const elementBottom = elementTop + elementHeight;
                      const elementMiddle = elementTop + elementHeight / 2;
                      
+                      // 判断子节点是否与视口有重叠部分
+                      const isOverlapping = elementBottom >= parentTop && elementTop <= parentBottom;
+                        
                      // 检查子节点是否在视口内
-                     if (elementTop <= parentBottom && elementTop + elementHeight >= parentTop) {
+                     if (isOverlapping) {
                          const distanceToParentTop = Math.abs(elementMiddle - parentTop);
                          // 找到距离容器顶部最近的子节点
                          if (distanceToParentTop < bestChildDistance) {
