@@ -109,8 +109,46 @@ const updateSelectedNodeByScroll = (currentSelectedKey) => {
                 smallestDistance = distanceToParentTop;
             }
         });
-        // 如果没有元素完全在父容器内，选择第一个顶部在父容器内的元素
-        let keyToSelect = closetKey || firstInViewKey;
+     // 如果没有元素完全在父容器内，选择第一个顶部在父容器内的元素
+     let keyToSelect = closetKey || firstInViewKey;
+        
+     // 新增逻辑：检查选中节点是否有子节点，并在视口内的子节点中选择
+     if (keyToSelect) {
+         // 查找当前选中节点
+         const selectedNode = findNodeByKey(treeData, keyToSelect);
+         
+         // 如果找到节点且有子节点
+         if (selectedNode && selectedNode.children && selectedNode.children.length > 0) {
+             let bestChildKey = null;
+             let bestChildDistance = Infinity;
+             
+             // 检查所有子节点
+             selectedNode.children.forEach(child => {
+                 const childElement = subControlsRef.current[child.id];
+                 if (childElement) {
+                     const rect = childElement.getBoundingClientRect();
+                     const elementTop = rect.top;
+                     const elementHeight = rect.height;
+                     const elementMiddle = elementTop + elementHeight / 2;
+                     
+                     // 检查子节点是否在视口内
+                     if (elementTop <= parentBottom && elementTop + elementHeight >= parentTop) {
+                         const distanceToParentTop = Math.abs(elementMiddle - parentTop);
+                         // 找到距离容器顶部最近的子节点
+                         if (distanceToParentTop < bestChildDistance) {
+                             bestChildDistance = distanceToParentTop;
+                             bestChildKey = child.id;
+                         }
+                     }
+                 }
+             });
+             
+             // 如果找到合适的子节点，使用子节点的key
+             if (bestChildKey) {
+                 keyToSelect = bestChildKey;
+             }
+         }
+     }
         if(keyToSelect && keyToSelect !== currentSelectedKey) {
             const newActiveNode = findNodeByKey(treeData, closetKey);
             if(newActiveNode) {
