@@ -34,6 +34,7 @@ const DocumentContent = forwardRef((props, ref) => {
 
    const parentRef = useRef(null);
 const controlsRef = useRef({});
+const subControlsRef = useRef({});
 const isScrollingRef = useRef(false);
 const isTreeClickRef = useRef(false);
 const lastScrollTopRef = useRef(0);
@@ -77,7 +78,21 @@ const updateSelectedNodeByScroll = (currentSelectedKey) => {
         let firstInViewKey = null;
         let firstInViewTop = Infinity;
 
-        Object.entries(controlsRef.current).forEach(([key, element]) => {
+        const allNodes = [
+            ...Object.entries(controlsRef.current).map(([key, element]) => ({key, element, type: 'normal'})),
+            ...Object.entries(subControlsRef.current).map(([key, element]) => ({key, element, type: 'sub'})),
+        ]
+
+        allNodes.sort((a, b) => {
+          if(a.type === 'sub' && b.type === 'normal') {
+            return -1;
+          }
+          if(a.type === 'normal' && b.type === 'sub') {
+            return 1;
+          }
+        })
+
+        allNodes.forEach(({key, element, type}) => {
            if(!element) return;
             const rect = element.getBoundingClientRect();
             const elementTop = rect.top;
@@ -110,8 +125,10 @@ const updateSelectedNodeByScroll = (currentSelectedKey) => {
 const handleTreeSelect = (selectedNode) => {
     isTreeClickRef.current = true;
     const selectedElement = controlsRef.current[selectedNode?.id];
-    if(selectedElement && parentRef.current) {
-       selectedElement.scrollIntoView({
+    const subSelectedElement = subControlsRef.current[selectedNode?.id];
+    const dom = subSelectedElement || selectedElement;
+    if(dom && parentRef.current) {
+       dom.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
         inline: 'center',
@@ -184,14 +201,20 @@ const flattenContentList = (contentList) => {
                                     {
                                         (item.contents || [])?.map((subItem, subIndex) => {
                                             return (
-                                                <ContainerSubControl
-                                                    key={subItem.id}
-                                                    dispatch={dispatch}
-                                                    editorActions={editorActions}
-                                                    editorState={editorState}
-                                                    content={subItem}
-                                                    activeTreeNode={activeTreeNode}
-                                                />
+                                                <div ref={el => {
+                                                    if(content.moduleType === 'scene') {
+                                                        subControlsRef.current[subItem.id] = el;
+                                                    }
+                                                }}>
+                                                    <ContainerSubControl
+                                                        key={subItem.id}
+                                                        dispatch={dispatch}
+                                                        editorActions={editorActions}
+                                                        editorState={editorState}
+                                                        content={subItem}
+                                                        activeTreeNode={activeTreeNode}
+                                                    />
+                                                </div>
                                             ) 
                                         })
                                     }
