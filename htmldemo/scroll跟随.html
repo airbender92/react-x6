@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>滚动高亮大纲目录示例</title>
+  <!-- 引入 Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入 Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- Tailwind 配置 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#165DFF',
+            secondary: '#36CFC9',
+            neutral: {
+              100: '#F5F7FA',
+              200: '#E5E6EB',
+              300: '#C9CDD4',
+              400: '#86909C',
+              500: '#4E5969',
+              600: '#272E3B',
+              700: '#1D2129',
+            }
+          },
+          fontFamily: {
+            inter: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          boxShadow: {
+            'card': '0 4px 20px rgba(0, 0, 0, 0.08)',
+            'card-hover': '0 8px 30px rgba(0, 0, 0, 0.12)',
+          }
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .scrollbar-hide {
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+      }
+      .text-balance {
+        text-wrap: balance;
+      }
+      .transition-transform-opacity {
+        transition-property: transform, opacity;
+      }
+    }
+  </style>
+  
+  <style>
+    /* 平滑滚动 */
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    /* 高亮动画 */
+    @keyframes highlight {
+      0% {
+        box-shadow: 0 0 0 0 rgba(22, 93, 255, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(22, 93, 255, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(22, 93, 255, 0);
+      }
+    }
+    
+    .highlight {
+      animation: highlight 1.5s ease-out;
+    }
+    
+    /* 内容区域的分隔线 */
+    .content-section {
+      border-left: 2px solid #E5E6EB;
+      transition: border-color 0.3s ease;
+    }
+    
+    .content-section:hover {
+      border-left-color: #165DFF;
+    }
+    
+    /* 目录项的过渡效果 */
+    .toc-item {
+      transition: all 0.2s ease;
+    }
+    
+    .toc-item:hover {
+      transform: translateX(4px);
+    }
+  </style>
+</head>
+<body class="font-inter bg-neutral-100 text-neutral-700 min-h-screen flex flex-col">
+  <!-- 导航栏 -->
+  <header class="bg-white shadow-md sticky top-0 z-50 transition-all duration-300" id="navbar">
+    <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <i class="fa fa-book text-primary text-2xl"></i>
+        <h1 class="text-xl font-bold text-neutral-700">文档示例</h1>
+      </div>
+      
+      <nav class="hidden md:flex items-center space-x-6">
+        <a href="#" class="text-neutral-500 hover:text-primary transition-colors duration-200">首页</a>
+        <a href="#" class="text-neutral-500 hover:text-primary transition-colors duration-200">关于</a>
+        <a href="#" class="text-neutral-500 hover:text-primary transition-colors duration-200">联系我们</a>
+      </nav>
+      
+      <button class="md:hidden text-neutral-700 focus:outline-none" id="mobile-menu-button">
+        <i class="fa fa-bars text-xl"></i>
+      </button>
+    </div>
+    
+    <!-- 移动端菜单 -->
+    <div class="md:hidden hidden bg-white shadow-lg absolute w-full" id="mobile-menu">
+      <div class="container mx-auto px-4 py-3 flex flex-col space-y-3">
+        <a href="#" class="text-neutral-500 hover:text-primary transition-colors duration-200 py-2">首页</a>
+        <a href="#" class="text-neutral-500 hover:text-primary transition-colors duration-200 py-2">关于</a>
+        <a href="#" class="text-neutral-500 hover:text-primary transition-colors duration-200 py-2">联系我们</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主内容区 -->
+  <main class="flex-grow container mx-auto px-4 py-6 md:py-10 flex flex-col md:flex-row gap-8">
+    <!-- 侧边栏大纲目录 -->
+    <aside class="md:w-1/4 lg:w-1/5 xl:w-1/6 sticky top-24 self-start bg-white rounded-lg shadow-card p-4 md:p-6 transition-all duration-300" id="toc-container">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-neutral-700 flex items-center">
+          <i class="fa fa-list-ul text-primary mr-2"></i>
+          目录
+        </h2>
+        <button class="text-neutral-400 hover:text-primary transition-colors" id="toggle-toc">
+          <i class="fa fa-chevron-up"></i>
+        </button>
+      </div>
+      
+      <nav class="space-y-1 scrollbar-hide max-h-[calc(100vh-200px)] overflow-y-auto" id="toc">
+        <a href="#introduction" class="toc-item block py-2 px-3 rounded-md text-neutral-600 hover:bg-neutral-100 hover:text-primary">
+          <i class="fa fa-angle-right mr-2 text-neutral-400"></i>
+          介绍
+        </a>
+        <a href="#features" class="toc-item block py-2 px-3 rounded-md text-neutral-600 hover:bg-neutral-100 hover:text-primary">
+          <i class="fa fa-angle-right mr-2 text-neutral-400"></i>
+          功能特点
+        </a>
+        <a href="#installation" class="toc-item block py-2 px-3 rounded-md text-neutral-600 hover:bg-neutral-100 hover:text-primary">
+          <i class="fa fa-angle-right mr-2 text-neutral-400"></i>
+          安装指南
+        </a>
+        <a href="#usage" class="toc-item block py-2 px-3 rounded-md text-neutral-600 hover:bg-neutral-100 hover:text-primary">
+          <i class="fa fa-angle-right mr-2 text-neutral-400"></i>
+          使用方法
+        </a>
+        <a href="#advanced" class="toc-item block py-2 px-3 rounded-md text-neutral-600 hover:bg-neutral-100 hover:text-primary">
+          <i class="fa fa-angle-right mr-2 text-neutral-400"></i>
+          高级功能
+        </a>
+        <a href="#faq" class="toc-item block py-2 px-3 rounded-md text-neutral-600 hover:bg-neutral-100 hover:text-primary">
+          <i class="fa fa-angle-right mr-2 text-neutral-400"></i>
+          常见问题
+        </a>
+        <a href="#contact" class="toc-item block py-2 px-3 rounded-md text-neutral-600 hover:bg-neutral-100 hover:text-primary">
+          <i class="fa fa-angle-right mr-2 text-neutral-400"></i>
+          联系我们
+        </a>
+      </nav>
+    </aside>
+    
+    <!-- 主要内容 -->
+    <article class="md:w-3/4 lg:w-4/5 xl:w-5/6">
+      <div class="bg-white rounded-lg shadow-card p-6 md:p-8 mb-6 transition-all duration-300 hover:shadow-card-hover">
+        <section id="introduction" class="content-section pl-4 pb-8 mb-8 border-b border-neutral-200">
+          <h2 class="text-2xl font-bold text-neutral-800 mb-4 flex items-center">
+            <i class="fa fa-info-circle text-primary mr-2"></i>
+            介绍
+          </h2>
+          <p class="text-neutral-600 mb-4 leading-relaxed">
+            这是一个展示文档滚动时大纲目录自动高亮效果的示例页面。当你滚动阅读文档内容时，左侧的大纲目录会自动高亮显示当前正在查看的部分。
+          </p>
+          <p class="text-neutral-600 leading-relaxed">
+            这种功能对于长文档阅读体验非常有帮助，可以让读者随时知道自己在文档中的位置。同时，点击大纲目录中的任何条目，页面会平滑滚动到对应的内容区域。
+          </p>
+        </section>
+        
+        <section id="features" class="content-section pl-4 pb-8 mb-8 border-b border-neutral-200">
+          <h2 class="text-2xl font-bold text-neutral-800 mb-4 flex items-center">
+            <i class="fa fa-star text-primary mr-2"></i>
+            功能特点
+          </h2>
+          <ul class="list-disc pl-6 text-neutral-600 space-y-3 mb-4">
+            <li>滚动时自动高亮当前阅读的内容部分</li>
+            <li>点击目录项平滑滚动到对应内容</li>
+            <li>响应式设计，适配各种屏幕尺寸</li>
+            <li>美观的动画和过渡效果</li>
+            <li>支持展开/折叠目录</li>
+          </ul>
+          <p class="text-neutral-600 leading-relaxed">
+            这些功能共同提升了长文档的阅读体验，使内容导航更加直观和便捷。无论是在桌面设备还是移动设备上，用户都能轻松地浏览和定位文档内容。
+          </p>
+        </section>
+        
+        <section id="installation" class="content-section pl-4 pb-8 mb-8 border-b border-neutral-200">
+          <h2 class="text-2xl font-bold text-neutral-800 mb-4 flex items-center">
+            <i class="fa fa-cogs text-primary mr-2"></i>
+            安装指南
+          </h2>
+          <p class="text-neutral-600 mb-4 leading-relaxed">
+            实现这种滚动高亮目录效果并不复杂，主要涉及HTML结构、CSS样式和JavaScript交互。以下是实现步骤的概述：
+          </p>
+          <div class="bg-neutral-50 p-4 rounded-lg mb-4">
+            <h3 class="font-medium text-neutral-800 mb-2">步骤1: 创建HTML结构</h3>
+            <p class="text-neutral-600 mb-2">
+              创建包含目录和内容的基本HTML结构，确保内容部分有对应的ID。
+            </p>
+          </div>
+          <div class="bg-neutral-50 p-4 rounded-lg mb-4">
+            <h3 class="font-medium text-neutral-800 mb-2">步骤2: 添加CSS样式</h3>
+            <p class="text-neutral-600 mb-2">
+              设计美观的目录样式和内容布局，包括高亮状态的样式。
+            </p>
+          </div>
+          <div class="bg-neutral-50 p-4 rounded-lg">
+            <h3 class="font-medium text-neutral-800 mb-2">步骤3: 实现JavaScript交互</h3>
+            <p class="text-neutral-600">
+              使用Intersection Observer API或监听scroll事件来检测内容区域的可见性，并相应地更新目录高亮状态。
+            </p>
+          </div>
+        </section>
+        
+        <section id="usage" class="content-section pl-4 pb-8 mb-8 border-b border-neutral-200">
+          <h2 class="text-2xl font-bold text-neutral-800 mb-4 flex items-center">
+            <i class="fa fa-book text-primary mr-2"></i>
+            使用方法
+          </h2>
+          <p class="text-neutral-600 mb-4 leading-relaxed">
+            使用这个滚动高亮目录功能非常简单。你可以通过以下方式与页面交互：
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div class="bg-neutral-50 p-4 rounded-lg border-l-4 border-primary">
+              <h3 class="font-medium text-neutral-800 mb-2 flex items-center">
+                <i class="fa fa-hand-pointer-o text-primary mr-2"></i>
+                点击导航
+              </h3>
+              <p class="text-neutral-600">
+                点击左侧目录中的任何条目，页面会平滑滚动到对应的内容区域。
+              </p>
+            </div>
+            <div class="bg-neutral-50 p-4 rounded-lg border-l-4 border-secondary">
+              <h3 class="font-medium text-neutral-800 mb-2 flex items-center">
+                <i class="fa fa-mouse-pointer text-secondary mr-2"></i>
+                滚动高亮
+              </h3>
+              <p class="text-neutral-600">
+                当你滚动阅读内容时，左侧目录会自动高亮显示当前可见的内容部分。
+              </p>
+            </div>
+          </div>
+          <p class="text-neutral-600 leading-relaxed">
+            这种双向交互模式让用户可以通过目录快速定位内容，也可以在阅读过程中随时知道自己在文档中的位置。
+          </p>
+        </section>
+        
+        <section id="advanced" class="content-section pl-4 pb-8 mb-8 border-b border-neutral-200">
+          <h2 class="text-2xl font-bold text-neutral-800 mb-4 flex items-center">
+            <i class="fa fa-rocket text-primary mr-2"></i>
+            高级功能
+          </h2>
+          <p class="text-neutral-600 mb-4 leading-relaxed">
+            除了基本的滚动高亮功能外，你还可以扩展实现更多高级功能：
+          </p>
+          <div class="bg-neutral-50 p-4 rounded-lg mb-4">
+            <h3 class="font-medium text-neutral-800 mb-2 flex items-center">
+              <i class="fa fa-code text-primary mr-2"></i>
+              多级目录
+            </h3>
+            <p class="text-neutral-600 mb-2">
+              实现嵌套的多级目录结构，对应文档中的不同层级标题。
+            </p>
+          </div>
+          <div class="bg-neutral-50 p-4 rounded-lg mb-4">
+            <h3 class="font-medium text-neutral-800 mb-2 flex items-center">
+              <i class="fa fa-eye text-primary mr-2"></i>
+              内容预览
+            </h3>
+            <p class="text-neutral-600 mb-2">
+              在悬停目录项时显示对应内容的简短预览。
+            </p>
+          </div>
+          <div class="bg-neutral-50 p-4 rounded-lg mb-4">
+            <h3 class="font-medium text-neutral-800 mb-2 flex items-center">
+              <i class="fa fa-bookmark text-primary mr-2"></i>
+              书签功能
+            </h3>
+            <p class="text-neutral-600 mb-2">
+              允许用户标记和保存重要的文档位置。
+            </p>
+          </div>
+          <div class="bg-neutral-50 p-4 rounded-lg">
+            <h3 class="font-medium text-neutral-800 mb-2 flex items-center">
+              <i class="fa fa-sliders text-primary mr-2"></i>
+              自定义主题
+            </h3>
+            <p class="text-neutral-600">
+              提供主题切换功能，如亮色/暗色模式切换。
+            </p>
+          </div>
+        </section>
+        
+        <section id="faq" class="content-section pl-4 pb-8 mb-8 border-b border-neutral-200">
+          <h2 class="text-2xl font-bold text-neutral-800 mb-4 flex items-center">
+            <i class="fa fa-question-circle text-primary mr-2"></i>
+            常见问题
+          </h2>
+          <div class="space-y-4">
+            <div class="border border-neutral-200 rounded-lg overflow-hidden">
+              <button class="faq-toggle w-full flex justify-between items-center p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors text-left">
+                <span class="font-medium text-neutral-800">如何调整高亮区域的灵敏度？</span>
+                <i class="fa fa-chevron-down text-neutral-400 transition-transform"></i>
+              </button>
+              <div class="faq-content hidden p-4 bg-white">
+                <p class="text-neutral-600">
+                  灵敏度可以通过调整Intersection Observer的threshold参数或修改scroll事件处理中的判断条件来实现。较小的阈值会使高亮更敏感，较大的阈值则需要更多内容可见才会触发高亮。
+                </p>
+              </div>
+            </div>
+            
+            <div class="border border-neutral-200 rounded-lg overflow-hidden">
+              <button class="faq-toggle w-full flex justify-between items-center p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors text-left">
+                <span class="font-medium text-neutral-800">这个功能在移动设备上表现如何？</span>
+                <i class="fa fa-chevron-down text-neutral-400 transition-transform"></i>
+              </button>
+              <div class="faq-content hidden p-4 bg-white">
+                <p class="text-neutral-600">
+                  该功能在移动设备上表现良好，目录会自动调整为更适合触控的布局。当屏幕宽度变小时，目录可能会转为可折叠的侧边栏或顶部导航。
+                </p>
+              </div>
+            </div>
+            
+            <div class="border border-neutral-200 rounded-lg overflow-hidden">
+              <button class="faq-toggle w-full flex justify-between items-center p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors text-left">
+                <span class="font-medium text-neutral-800">是否支持动态加载的内容？</span>
+                <i class="fa fa-chevron-down text-neutral-400 transition-transform"></i>
+              </button>
+              <div class="faq-content hidden p-4 bg-white">
+                <p class="text-neutral-600">
+                  是的，只要在内容加载后重新初始化Intersection Observer或更新事件监听，该功能就能支持动态加载的内容。
+                </p>
+              </div>
+            </div>
+            
+            <div class="border border-neutral-200 rounded-lg overflow-hidden">
+              <button class="faq-toggle w-full flex justify-between items-center p-4 bg-neutral-50 hover:bg-neutral-100 transition-colors text-left">
+                <span class="font-medium text-neutral-800">如何自定义高亮效果？</span>
+                <i class="fa fa-chevron-down text-neutral-400 transition-transform"></i>
+              </button>
+              <div class="faq-content hidden p-4 bg-white">
+                <p class="text-neutral-600">
+                  可以通过修改CSS中.active类的样式来自定义高亮效果。你可以更改背景色、文本颜色、边框、阴影等属性来创建你想要的视觉效果。
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+        
+        <section id="contact" class="content-section pl-4">
+          <h2 class="text-2xl font-bold text-neutral-800 mb-4 flex items-center">
+            <i class="fa fa-envelope text-primary mr-2"></i>
+            联系我们
+          </h2>
+          <p class="text-neutral-600 mb-4 leading-relaxed">
+            如果您有任何问题或建议，欢迎通过以下方式联系我们：
+          </p>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div class="bg-neutral-50 p-4 rounded-lg text-center">
+              <div class="text-primary text-3xl mb-2">
+                <i class="fa fa-phone"></i>
+              </div>
+              <h3 class="font-medium text-neutral-800 mb-1">电话</h3>
+              <p class="text-neutral-600">+86 123 4567 8910</p>
+            </div>
+            <div class="bg-neutral-50 p-4 rounded-lg text-center">
+              <div class="text-primary text-3xl mb-2">
+                <i class="fa fa-envelope"></i>
+              </div>
+              <h3 class="font-medium text-neutral-800 mb-1">邮箱</h3>
+              <p class="text-neutral-600">contact@example.com</p>
+            </div>
+            <div class="bg-neutral-50 p-4 rounded-lg text-center">
+              <div class="text-primary text-3xl mb-2">
+                <i class="fa fa-map-marker"></i>
+              </div>
+              <h3 class="font-medium text-neutral-800 mb-1">地址</h3>
+              <p class="text-neutral-600">北京市朝阳区科技园</p>
+            </div>
+          </div>
+          <p class="text-neutral-600 leading-relaxed">
+            我们的团队将尽快回复您的咨询，感谢您的关注！
+          </p>
+        </section>
+      </div>
+      
+      <!-- 回到顶部按钮 -->
+      <button id="back-to-top" class="fixed bottom-6 right-6 bg-primary text-white p-3 rounded-full shadow-lg opacity-0 invisible transition-all duration-300 hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/50">
+        <i class="fa fa-chevron-up"></i>
+      </button>
+    </article>
+  </main>
+  
+  <!-- 页脚 -->
+  <footer class="bg-neutral-800 text-white py-8">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <h3 class="text-lg font-semibold mb-4 flex items-center">
+            <i class="fa fa-book text-primary mr-2"></i>
+            文档示例
+          </h3>
+          <p class="text-neutral-400">
+            提供高质量的文档阅读体验，帮助用户更轻松地获取信息。
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">快速链接</h3>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-neutral-400 hover:text-primary transition-colors">首页</a></li>
+            <li><a href="#" class="text-neutral-400 hover:text-primary transition-colors">关于我们</a></li>
+            <li><a href="#" class="text-neutral-400 hover:text-primary transition-colors">联系我们</a></li>
+            <li><a href="#" class="text-neutral-400 hover:text-primary transition-colors">隐私政策</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-4">关注我们</h3>
+          <div class="flex space-x-4">
+            <a href="#" class="text-neutral-400 hover:text-primary transition-colors text-xl">
+              <i class="fa fa-weibo"></i>
+            </a>
+            <a href="#" class="text-neutral-400 hover:text-primary transition-colors text-xl">
+              <i class="fa fa-wechat"></i>
+            </a>
+            <a href="#" class="text-neutral-400 hover:text-primary transition-colors text-xl">
+              <i class="fa fa-github"></i>
+            </a>
+            <a href="#" class="text-neutral-400 hover:text-primary transition-colors text-xl">
+              <i class="fa fa-linkedin"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      <div class="border-t border-neutral-700 mt-8 pt-8 text-center text-neutral-500">
+        <p>&copy; 2023 文档示例. 保留所有权利.</p>
+      </div>
+    </div>
+  </footer>
+  
+  <script>
+    // 等待DOM加载完成
+    document.addEventListener('DOMContentLoaded', function() {
+      // 获取DOM元素
+      const navbar = document.getElementById('navbar');
+      const mobileMenuButton = document.getElementById('mobile-menu-button');
+      const mobileMenu = document.getElementById('mobile-menu');
+      const tocContainer = document.getElementById('toc-container');
+      const toggleToc = document.getElementById('toggle-toc');
+      const toc = document.getElementById('toc');
+      const backToTopButton = document.getElementById('back-to-top');
+      const faqToggles = document.querySelectorAll('.faq-toggle');
+      
+      // 获取目录项和内容区域
+      const tocItems = document.querySelectorAll('#toc a');
+      const sections = Array.from(tocItems).map(item => {
+        const href = item.getAttribute('href');
+        return document.querySelector(href);
+      });
+      
+      // 移动菜单切换
+      mobileMenuButton.addEventListener('click', function() {
+        mobileMenu.classList.toggle('hidden');
+      });
+      
+      // 目录展开/折叠
+      toggleToc.addEventListener('click', function() {
+        toc.classList.toggle('hidden');
+        const icon = toggleToc.querySelector('i');
+        if (toc.classList.contains('hidden')) {
+          icon.classList.remove('fa-chevron-up');
+          icon.classList.add('fa-chevron-down');
+        } else {
+          icon.classList.remove('fa-chevron-down');
+          icon.classList.add('fa-chevron-up');
+        }
+      });
+      
+      // FAQ切换
+      faqToggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+          const content = this.nextElementSibling;
+          const icon = this.querySelector('i');
+          
+          content.classList.toggle('hidden');
+          icon.classList.toggle('rotate-180');
+        });
+      });
+      
+      // 回到顶部按钮
+      window.addEventListener('scroll', function() {
+        if (window.scrollY > 300) {
+          backToTopButton.classList.remove('opacity-0', 'invisible');
+          backToTopButton.classList.add('opacity-100', 'visible');
+        } else {
+          backToTopButton.classList.remove('opacity-100', 'visible');
+          backToTopButton.classList.add('opacity-0', 'invisible');
+        }
+        
+        // 导航栏滚动效果
+        if (window.scrollY > 50) {
+          navbar.classList.add('py-2');
+          navbar.classList.remove('py-3');
+        } else {
+          navbar.classList.add('py-3');
+          navbar.classList.remove('py-2');
+        }
+      });
+      
+      backToTopButton.addEventListener('click', function() {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      });
+      
+      // 滚动高亮目录 - 使用 Intersection Observer API
+      const observerOptions = {
+        rootMargin: '-10% 0px -70% 0px', // 定义观察区域，顶部10%和底部70%的区域不算作可见
+        threshold: 0.1 // 当至少10%的元素可见时触发
+      };
+      
+      const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            // 获取当前可见的部分ID
+            const id = entry.target.getAttribute('id');
+            
+            // 移除所有目录项的活动状态
+            tocItems.forEach(item => {
+              item.classList.remove('bg-primary/10', 'text-primary', 'font-medium', 'border-l-4', 'border-primary', 'pl-2');
+              item.classList.add('text-neutral-600');
+            });
+            
+            // 为当前部分对应的目录项添加活动状态
+            const activeTocItem = document.querySelector(`#toc a[href="#${id}"]`);
+            if (activeTocItem) {
+              activeTocItem.classList.remove('text-neutral-600');
+              activeTocItem.classList.add('bg-primary/10', 'text-primary', 'font-medium', 'border-l-4', 'border-primary', 'pl-2');
+              
+              // 添加高亮动画效果
+              entry.target.classList.add('highlight');
+              setTimeout(() => {
+                entry.target.classList.remove('highlight');
+              }, 1500);
+            }
+          }
+        });
+      }, observerOptions);
+      
+      // 观察所有内容部分
+      sections.forEach(section => {
+        if (section) {
+          observer.observe(section);
+        }
+      });
+      
+      // 点击目录项平滑滚动到对应内容
+      tocItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+          e.preventDefault();
+          const targetId = this.getAttribute('href');
+          const targetElement = document.querySelector(targetId);
+          
+          if (targetElement) {
+            // 平滑滚动到目标位置
+            targetElement.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+            
+            // 在移动设备上点击后关闭菜单
+            if (window.innerWidth < 768) {
+              mobileMenu.classList.add('hidden');
+            }
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
