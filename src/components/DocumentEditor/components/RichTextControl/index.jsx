@@ -25,6 +25,13 @@ const RichTextControl = forwardRef((props, ref) => {
         };
     }
 
+    useEffect(() => {
+        // 当 moduleContents 变化时，更新编辑器内容
+        if (editorRef.current && moduleContents) {
+            editorRef.current.setContent(moduleContents);
+        }
+    }, [moduleContents]);
+
     useImperativeHandle(ref, () => ({
         getContent,
         editorRef,
@@ -37,6 +44,7 @@ const RichTextControl = forwardRef((props, ref) => {
     return (
         <BundleEditor
             ref={editorRef}
+            initialValue={moduleContents}
             init={{
                 height: 500,
                 menubar: false,
