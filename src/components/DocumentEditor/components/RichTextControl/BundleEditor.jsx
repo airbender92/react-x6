@@ -56,6 +56,50 @@ const BundleEditor = forwardRef((props, ref) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [uploadType, setUploadType] = useState('image');
   const editorRef = useRef(null);
+
+  // 下载处理函数
+  const handleDownload = async (event) => {
+    event.preventDefault();
+    console.log('下载触发:', event);
+    
+    // 获取点击元素的文件URL（假设通过data属性存储）
+    const fileUrl = event.target.closest('[data-file-url]')?.dataset.fileUrl;
+    if (!fileUrl) return;
+    
+    try {
+      // 调用下载逻辑
+      const response = await fetch(fileUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`下载失败: ${response.status}`);
+      }
+      
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      
+      // 从data属性获取文件名
+      const filename = event.target.closest('[data-file-name]')?.dataset.fileName || '下载文件';
+      a.download = filename;
+      
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 0);
+      
+    } catch (error) {
+      message.error(`下载失败: ${error.message}`);
+      console.error('下载错误:', error);
+    }
+  };
   
   const handleSetup = (editor) => {
     editor.options.register('mentionOptions', {processor: 'object[]', default: keyWords});
@@ -67,6 +111,20 @@ const BundleEditor = forwardRef((props, ref) => {
             setUploadType('image');
             setIsModalOpen(true);
         }
+    });
+
+     // 监听编辑器内的点击事件（关键步骤）
+    editor.on('click', (e) => {
+      // 检查点击的元素是否是我们插入的可下载元素
+      const target = e.target;
+      if (target && target.hasAttribute('data-is-downloadable')) {
+        handleDownload({
+          preventDefault: () => {},
+          target: target,
+          stopPropagation: () => {}
+        });
+        e.stopPropagation(); // 阻止事件冒泡
+      }
     });
     
   }
@@ -80,6 +138,21 @@ const BundleEditor = forwardRef((props, ref) => {
   const handleInserDom = (params, type) => {
     if(type === 'image') {
       editorRef.current.insertContent(`<img src="${params.url}" alt="${params.alt}" />`);
+    }
+    if(type === 'file') {
+        // 插入带数据属性的可点击元素
+      const insertHtml = `
+        <span 
+          data-is-downloadable="true"
+          data-file-url="${fileUrl}"
+          data-file-name="${file.name}"
+          style="cursor: pointer;color:#0067de;text-decoration: underline;"
+        >
+          ${file.name}
+        </span>
+      `;
+      
+      editorRef.current.insertContent(insertHtml);
     }
   }
 
