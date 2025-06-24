@@ -181,7 +181,7 @@ tinymce.PluginManager.add('mention', function(editor, url) {
     const getCaretPosition = () => {
         const selection = editor.selection.getRng();
         if(!selection){
-            return {left: 0, top: 0};
+            return {left: 0, top: 0, rect: null};
         }
         let rect;
         // 处理iframe
@@ -194,11 +194,12 @@ tinymce.PluginManager.add('mention', function(editor, url) {
             const rect = caretRect.width > 0 ? caretRect : rng.getClientRects().length > 0 ? rng.getClientRects()[0] : null;
             if(rect){
                 return {
+                    rect:rect,
                     left: rect.left + iframceRect.left + window.scrollX - iframe.contentWindow.scrollX,
                     top: rect.top + iframceRect.top + window.scrollY - iframe.contentWindow.scrollY + 15,
                 }; 
             }
-            return {left: 0, top: 0};
+            return {left: 0, top: 0, rect: null};
         } else {
             const clonedRange = selection.cloneRange();
             rect = clonedRange.getBoundingClientRect();
@@ -206,6 +207,7 @@ tinymce.PluginManager.add('mention', function(editor, url) {
         return {
             left: rect.left,
             top: rect.bottom + 5,
+            rect:rect,
         }
     };
 
@@ -258,11 +260,14 @@ tinymce.PluginManager.add('mention', function(editor, url) {
 
             // 获取光标符号位置
             const caretPosition = getCaretPosition();
+            if(!caretPosition.rect) return;
 
             // 创建下拉菜单
             createDropdown();
             let left = caretPosition.left;
             let top = caretPosition.top;
+            const rect = caretPosition.rect;
+
 
             // 边界检测
             const {width, height} = dropdown?.getBoundingClientRect() || {width: 200, height: 150}

@@ -1,0 +1,24 @@
+.attachmentControl {
+    position: relative;
+    width: 100%;
+    min-height: 100px;
+    padding-right: 20px;
+    &.isEmplt {
+        text-align: center;
+    }
+    :global(.ant-list) {
+        margin-top: 10px;
+    }
+    :global(.ant-list .ant-list-items > .ant-list-item) {
+        padding: 4px 6px;
+        &:hover{
+            background-color: #4d9af31a;
+        }
+    }
+}
+
+.uploadBtn{
+    position: absolute;
+    top: -10px;
+    right: 0;
+}

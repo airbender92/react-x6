@@ -4,6 +4,7 @@ import { Spin } from 'antd';
 import DocumentContent from './DocumentContent';
 import {CategoryTree} from './CategoryTree';
 import { NavigationBlocker} from './NavigationBlocker'
+import BtnGroups from './components/BtnGroups'
 import styles from './styles.module.css';
 
 const DocumentEditor = (props) => {
@@ -32,7 +33,6 @@ const DocumentEditor = (props) => {
 
      useEffect(() => {
         if(planId) {
-            dispatch(editorActions.getKeyWords());
             dispatch(editorActions.getTreeDataAsync({relId: planId, isTemplate: isTemplate}));
             dispatch(editorActions.getContentList({relId: planId, isTemplate: isTemplate}));
         }
@@ -41,7 +41,8 @@ const DocumentEditor = (props) => {
      return (
         <div className={styles.documentEditorOuter}>
             <Spin spinning={loading} size='large'>
-                <div className={`${styles.documentEditorWrapper}`}>
+                <NavigationBlocker when={mode !== 'view'} />
+                <div className={`${styles.documentEditorWrapper} ${isTemplate ? '' : styles.plan}`}>
                     <div className={styles.left}>
                         <CategoryTree
                             dispatch={dispatch}
@@ -63,6 +64,14 @@ const DocumentEditor = (props) => {
                         contentList={contentList}
                     />
                 </div>
+                {
+                    !isTemplate &&
+                    <BtnGroups 
+                        dispatch={dispatch}
+                        editorActions={editorActions}
+                        editorState={editorState}
+                    />
+                }
             </Spin>
         </div> 
      )
