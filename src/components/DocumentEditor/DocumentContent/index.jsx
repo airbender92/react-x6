@@ -18,7 +18,8 @@ import {
     SortableContext,
     verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
-import { findNodeByKey } from '../utils';
+import { findNodeByKey, flattenTree } from '../utils';
+import { useDicContext } from '@/components/DocumentEditor/DicContext'
 import styles from './index.less';
 
 const DocumentContent = forwardRef((props, ref) => {
@@ -31,6 +32,10 @@ const DocumentContent = forwardRef((props, ref) => {
    } = props; 
 
    const { treeData, isTemplate} = editorState;
+
+   const flattenedTree = flattenTree(treeData);
+
+   const {dicObj} = dicObj?.KEY_WORFS ?? [];
 
    const parentRef = useRef(null);
 const controlsRef = useRef({});

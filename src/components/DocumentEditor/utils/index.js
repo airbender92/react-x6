@@ -1,3 +1,5 @@
+export {flattenTree} from './treeUtil.js'
+
 /**
  * 删除当前节点时要重置选中的节点
  */
