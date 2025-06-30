@@ -1,17 +1,35 @@
 import tinymce from "tinymce/tinymce";
+import { debounce} from 'lodash'
+import dicService from '@/service/dicService'
 import styles from '../index.less'
+
+const getKeyWordsCode = async() => {
+    const {
+        code,
+        result
+    } = await dicService.queryDic({nodeCodes: ['key_word']})
+    if(code === '200') {
+        return result.keyword || []
+    }
+    return []
+}
 
 tinymce.PluginManager.add('mention', function(editor, url) {
     // 关键词列表
     const mentionOptions = editor.options.get('mentionOptions');
-    const options = mentionOptions || [];
-
+    let options = mentionOptions || [];
+    let isFirst = true;
     let dropdown = null;
     let selectedIndex = -1;
     let closeDropdownTimer = null;
     let optionsWrapper = null;
 
-    const createDropdown = () => {
+    const createDropdown = async() => {
+        // 如果是第一次请求下接口，因为从default里的keywords 可能会是【】， 导致插件里获取不到关键词的Bug
+        if(isFirst) {
+            options = await getKeyWordsCode();
+            isFirst = false;
+        }
         if(dropdown){
             dropdown.remove();
         }
@@ -47,14 +65,16 @@ tinymce.PluginManager.add('mention', function(editor, url) {
         // 保存原始选项用于过滤（关键新增代码）
         const originalOptions = [...options];
 
-          // 绑定输入事件（关键新增代码）
-          input.addEventListener('input', (e) => {
+        const handleInput = debounce((e) => {
             const keyword = e.target.value.trim().toLowerCase();
             const filteredOptions = originalOptions.filter(option => 
                 option.title.toLowerCase().includes(keyword)
             );
             updateDropdown(filteredOptions); // 触发选项更新
-        });
+        }, 200);
+
+          // 绑定输入事件（关键新增代码）
+          input.addEventListener('input', handleInput);
 
          // 初始加载所有选项（修改：使用原始选项）
          updateDropdown(originalOptions);
@@ -67,8 +87,10 @@ tinymce.PluginManager.add('mention', function(editor, url) {
         if(items.length === 0){
             const option = document.createElement('div');
             option.className = styles.tinymceMentionOption;
-            option.textContent = '没有找到相关选项';
+            option.textContent = '暂无数据';
             option.style.padding = "6px 10px";
+            option.style.cursor = 'not-allowed';
+            option.style.color = '#666';
             optionsWrapper.appendChild(option);
             return;
         }
@@ -98,16 +120,16 @@ tinymce.PluginManager.add('mention', function(editor, url) {
         if(dropdown){
             dropdown.remove();
             dropdown = null;
+            optionsWrapper = null;
         }
         selectedIndex = -1;
     };
 
     // 点击外部关闭下拉菜单
     const closeDropdownOnOutsideClick = (e) => {
-        if(!dropdown || dropdown.contains(e.target)){
-            return;
+        if(dropdown && !dropdown.contains(e.target)){
+            closeDropdown();
         }
-        closeDropdown();
     };
 
     // 插入关键词
@@ -241,7 +263,7 @@ tinymce.PluginManager.add('mention', function(editor, url) {
     };
 
     // 检查是否输入了@符号
-    const checkForAtSymbol = () => {
+    const checkForAtSymbol = async () => {
         // 获取当前光标的Range对象，
         const range = editor.selection.getRng();
         // 光标前无内容，直接返回
@@ -263,7 +285,7 @@ tinymce.PluginManager.add('mention', function(editor, url) {
             if(!caretPosition.rect) return;
 
             // 创建下拉菜单
-            createDropdown();
+            await createDropdown();
             let left = caretPosition.left;
             let top = caretPosition.top;
             const rect = caretPosition.rect;

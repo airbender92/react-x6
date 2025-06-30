@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle} fr
 import { Upload, Modal, Button } from 'antd'
 import { UploadOutlined } from '@ant-design/icons';
 import {Editor} from '@tinymce/tinymce-react';
+import { getFileExtension, allowedTypes, acceptFileExtensions} from '@/utils/fileUtil'
 import { content_style, customImage, customLink } from './constant'
 
 import "tinymce/tinymce";
@@ -21,13 +22,26 @@ import "tinymce/plugins/code";
 import "tinymce/plugins/advlist";
 import "tinymce/plugins/autoresize";
 import "./plugins/tinymce-mention"
+import "./plugins/tinymce-hide-table-colgroup"
+import "./plugins/tinymce-link"
 
 import styles from './index.less';
+import { useDicContext } from '../../DicContext';
 
 const plugins = [
-  "advlist autolink lists link image charmap print preview anchor",
-  "searchreplace visualblocks code fullscreen",
-  "insertdatetime media table paste code help wordcount autoresize mention"
+  'advlist',
+  'autolink',
+  'lists',
+  'link',
+  'image',
+  'charmap',
+  'preview',
+  'mention',
+  'searchreplace',
+  'visualblocks',
+  'table',
+  'autoresize',
+  'customLink'
 ];
 
 const toolbar = [
@@ -45,87 +59,123 @@ const defaultInitConfig = {
     autoresize_min_height: 200,
     height: 'auto',
     width: '100%',
+    promotion: false,
     menubar: false,
     statusbar: false,
     language: 'zh_CN',
-    contextmenu: false,
+    inline_boundaries_selector: 'a[href],code,b,i,em,strong,del,ins',
+    contextmenu: "customLink customImage | inserttable | cell row column deletetable",
 }
 
 const BundleEditor = forwardRef((props, ref) => {
-  const {init: customInit, keyWords, editorActions, ...rest} = props;
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [uploadType, setUploadType] = useState('image');
+  const {init: customInit, containerId, keyWords, editorActions, onChange, ...rest} = props;
+
+  const [editorReady, setEditorReady] = useState(false);
+  const [uploadType, setUploadType] = useState('img'); // img | file
+  const bundleEditorRef = useRef(null);
   const editorRef = useRef(null);
+  const fileInputRef= useRef(null);
+
+  const {dicObj} = useDicContext();
+  const FILE = dicObj?.FILE || {};
+
+  // MB单位
+  const maxImageSize = FILE?.find(item => item.dicCode === 'IMAGE')?.dicCount || 5; // 默认5MB
+  const maxAttachmentSize = FILE?.find(item => item.dicCode === 'ATTACH')?.dicCount || 5; // 默认5MB
+
+  const FILE_VALIDATION = {
+    img: {
+      maxSize: maxImageSize * 1024 * 1024, // 转换为字节
+      allowedTypes: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
+      errorMsg: `图片大小不能超过 ${maxImageSize}MB，支持的格式有：${allowedTypes.join(', ')}`
+    },
+    file:{
+      maxSize: maxAttachmentSize * 1024 * 1024, // 转换为字节
+      allowedTypes: acceptFileExtensions,
+      errorMsg: `文件大小不能超过 ${maxAttachmentSize}MB，支持的格式有：${acceptFileExtensions.join(', ')}`
+    }
+  };
 
   // 下载处理函数
   const handleDownload = async (event) => {
     event.preventDefault();
-    console.log('下载触发:', event);
-    
-    // 获取点击元素的文件URL（假设通过data属性存储）
-    const fileUrl = event.target.closest('[data-file-url]')?.dataset.fileUrl;
-    if (!fileUrl) return;
-    
-    try {
-      // 调用下载逻辑
-      const response = await fetch(fileUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`下载失败: ${response.status}`);
-      }
-      
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      
-      // 从data属性获取文件名
-      const filename = event.target.closest('[data-file-name]')?.dataset.fileName || '下载文件';
-      a.download = filename;
-      
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 0);
-      
-    } catch (error) {
-      message.error(`下载失败: ${error.message}`);
-      console.error('下载错误:', error);
+    const fileName = event.target.getAttribute('data-file-name')?.dataset.fileName;
+    if(!fileName) {
+      console.error('文件名不存在');
+      return;
+    }
+    try{
+      const extension = getFileExtension(fileName);
+      await editorActions.downloadAsync({fileName, extension});
+    }catch(error) {
+      console.error('下载文件失败:', error);
     }
   };
   
   const handleSetup = (editor) => {
     editor.options.register('mentionOptions', {processor: 'object[]', default: keyWords});
     editor.ui.register('custom-image', customImage);
+    editor.ui.register('custom-link', customLink);
+
     editor.ui.register.addButton('customImage', {
         icon: 'custom-image',
         tooltip: '插入图片',
         onAction: () => {
-            setUploadType('image');
-            setIsModalOpen(true);
-        }
+            setUploadType('img');
+            if(fileInputRef.current) {
+              fileInputRef.current.click();
+            }
+        },
     });
 
-     // 监听编辑器内的点击事件（关键步骤）
-    editor.on('click', (e) => {
-      // 检查点击的元素是否是我们插入的可下载元素
-      const target = e.target;
-      if (target && target.hasAttribute('data-is-downloadable')) {
-        handleDownload({
-          preventDefault: () => {},
-          target: target,
-          stopPropagation: () => {}
-        });
-        e.stopPropagation(); // 阻止事件冒泡
-      }
+       editor.ui.register.addButton('customLink', {
+        icon: 'custom-link',
+        tooltip: '插入链接',
+        onAction: () => {
+            setUploadType('file');
+            if(fileInputRef.current) {
+              fileInputRef.current.click();
+            }
+        },
     });
+
+    editor.ui.register.addMenuItem('customImage', {
+        icon: 'custom-image',
+        tooltip: '插入图片',
+        onAction: () => {
+            setUploadType('img');
+            if(fileInputRef.current) {
+              fileInputRef.current.click();
+            }
+        },
+    });
+
+       editor.ui.register.addMenuItem('customLink', {
+        icon: 'custom-link',
+        tooltip: '插入链接',
+        onAction: () => {
+            setUploadType('file');
+            if(fileInputRef.current) {
+              fileInputRef.current.click();
+            }
+        },
+    });
+
+    // 编辑模式下
+    if(!rest.disabled) {
+      // 监听编辑器内的点击事件
+      editor.on('click', e => {
+        const target = e.target;
+        if(target && target.hasAttribute('data-is-downloadable')){
+          handleDownload({
+            preventDefault: () => {},
+            target: target,
+            stopPropagation: () => {}
+          });
+          e.stopPropagation()
+        }
+      })
+    }
     
   }
 
@@ -136,7 +186,7 @@ const BundleEditor = forwardRef((props, ref) => {
   }
 
   const handleInserDom = (params, type) => {
-    if(type === 'image') {
+    if(type === 'img') {
       editorRef.current.insertContent(`<img src="${params.url}" alt="${params.alt}" />`);
     }
     if(type === 'file') {
@@ -182,9 +232,11 @@ const BundleEditor = forwardRef((props, ref) => {
         editorRef.current.remove();
       }
     };
-  }, [keyWords, editorRef],);
+  }, [keyWords]);
 
-  useImperativeHandle(ref, () => editorRef.current);
+  useImperativeHandle(ref, () => {
+    return editorRef.current;
+  }, [editorReady]);
 
 
   const handleEditorChange = (content) => {
@@ -196,7 +248,10 @@ const BundleEditor = forwardRef((props, ref) => {
     <div className={styles.bundleEditor}>
          <Editor
         apiKey='no-api-key'
-        onInit={(evt, editor) => editorRef.current = editor}
+        onInit={(evt, editor) => {
+          editorRef.current = editor;
+          setEditorReady(true);
+        }}
         onEditorChange={handleEditorChange}
         init={mergedInit}
         {...rest}
