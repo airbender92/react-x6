@@ -27,6 +27,7 @@ import "./plugins/tinymce-link"
 
 import styles from './index.less';
 import { useDicContext } from '../../DicContext';
+import { message } from 'antd';
 
 const plugins = [
   'advlist',
@@ -187,15 +188,18 @@ const BundleEditor = forwardRef((props, ref) => {
 
   const handleInserDom = (params, type) => {
     if(type === 'img') {
-      editorRef.current.insertContent(`<img src="${params.url}" alt="${params.alt}" />`);
+      editorRef.current.insertContent(`<img src="${params.url}" alt="${params.alt}" contenteditable="false" data-file-name="${params?.filename}" />`);
     }
     if(type === 'file') {
         // 插入带数据属性的可点击元素
       const insertHtml = `
         <span 
           data-is-downloadable="true"
+          contenteditable="false"
+          data-original-file-name="${params.originalFileName}"
           data-file-url="${fileUrl}"
           data-file-name="${file.name}"
+          onclick="${handleDownload}"
           style="cursor: pointer;color:#0067de;text-decoration: underline;"
         >
           ${file.name}
@@ -207,24 +211,61 @@ const BundleEditor = forwardRef((props, ref) => {
   }
 
 
-  const handleUpload = async({file, onSuccess, onError}) => {
-    if(editorRef.current) {
-        const formData = new FormData();
-        formData.append('file', file);
-        try {
-            const response = await editorActions.uploadFile(formData, uploadType);
-            if (response && response.url) {
-            handleInserDom(response, uploadType);
-            onSuccess(response);
-            setIsModalOpen(false);
-            } else {
-            throw new Error('上传失败');
-            }
-        } catch (error) {
-            onError(error);
-        }
+ const validateFile = (file) => {
+  const rules = FILE_VALIDATION[uploadType]
+  if(file.size > rules.maxSize) {
+    message.error(rules.errorMsg)
+    return false;
+  }
+  if(!file.type) {
+    const extension = getFileExtension(file.name);
+    if(acceptFileExtensions.indexOf(extension) === -1) {
+      message.error(rules.errorMsg)
+      return false;
     }
   }
+  if(file.type && !rules.allowedTypes.includes(file.type)) {
+    message.error(rules.errorMsg)
+    return false;
+  }
+ }
+
+ const handleFileChange = async(e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  if(!validateFile(file)) {
+    return;
+  }
+
+  try{
+    const formData = new FormData();
+    formData.append('file', file);
+    const result = await editorActions.uploadAsync(formData)
+    if(result) {
+      handleInserDom(result, uploadType)
+    } else {
+      throw new Error('上传失败')
+    }
+  } catch(er) {
+    message.warning('失败')
+  } finally {
+    // 重置input, 允许重复选择同一文件
+    fileInputRef.current.value = '';
+  }
+
+ }
+
+ const handleContainerClick = (event) => {
+  // 仅在只读模式下处理
+  if(rest?.disabled) {
+    const target = event.target;
+    if(target && target.closest('[data-file-name]')) {
+      handleDownload();
+      event.stopPropagation()
+    }
+  }
+ }
+
 
   useEffect(() => {
    return () => {
@@ -232,20 +273,33 @@ const BundleEditor = forwardRef((props, ref) => {
         editorRef.current.remove();
       }
     };
-  }, [keyWords]);
+  }, [keyWords?.length]);
+
+  useEffect(() => {
+    const wrapperContainer = bundleEditorRef?.current;
+    if(wrapperContainer) {
+      wrapperContainer.addEventListener('click', handleContainerClick);
+    }
+    return () => {
+      if(wrapperContainer) {
+        wrapperContainer.removeEventListener('click', handleContainerClick)
+      }
+    }
+  }, [rest?.disabled])
 
   useImperativeHandle(ref, () => {
     return editorRef.current;
   }, [editorReady]);
 
 
-  const handleEditorChange = (content) => {
-    setEditorValue(content);
-    onChange && onChange(content);
+  const handleEditorChange = (content, editor) => {
+    if(onChange) {
+      onChange(content, editor)
+    }
   };
 
   return (
-    <div className={styles.bundleEditor}>
+    <div className={styles.bundleEditor} ref={bundleEditorRef}>
          <Editor
         apiKey='no-api-key'
         onInit={(evt, editor) => {
@@ -256,24 +310,17 @@ const BundleEditor = forwardRef((props, ref) => {
         init={mergedInit}
         {...rest}
     />
-    <Modal
-        title={uploadType === 'image' ? '上传图片' : '上传文件'}
-        open={isModalOpen}
-        onCancel={() => setIsModalOpen(false)}
-        footer={null}
-        width={600}
-        destroyOnClose={true}
-    >
-        <Upload
-            customRequest={handleUpload}
-            showUploadList={false}
-            accept={uploadType === 'image' ? 'image/*' : '*'}
-        >
-            <Button icon={<UploadOutlined />} type="primary">
-                {uploadType === 'image' ? '选择图片' : '选择文件'}
-            </Button>
-        </Upload>
-    </Modal>
+    <input 
+      type="file"
+      ref={fileInputRef}
+      onChange={handleFileChange}
+      accept={
+        uploadType === 'img'
+        ? "image/*"
+        : acceptFileExtensions.join(',')
+      }
+      style={{display: 'none'}}
+    />
     </div>
    
   );
